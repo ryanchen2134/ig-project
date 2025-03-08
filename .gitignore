@@ -3,3 +3,5 @@ venv
 temp.json
 .cache
 named-downloads
+DISCO/audio
+DISCO/music_audioset_epoch_15_esc_90.14.pt
