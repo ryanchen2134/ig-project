@@ -22,7 +22,11 @@ model, preprocess = clip.load("ViT-B/32", device=device)
 
 if __name__ == "__main__":
     model.eval()
-    dataset = ImageMoodDataset(file_path='./image_data.csv', root_dir='./', transform=preprocess)
+
+    r_dir = 'G:/My Drive/YS - Images/City pop aesthetic'
+    f_path = './filtered/new_city_pop.csv'
+
+    dataset = ImageMoodDataset(file_path=f_path, root_dir=r_dir, transform=preprocess)
     dataloader = DataLoader(dataset=dataset, batch_size=32, shuffle=True, num_workers=4)    
     
     #Tokenize
