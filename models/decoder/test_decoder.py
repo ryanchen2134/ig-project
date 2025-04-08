@@ -4,11 +4,11 @@ import torchvision.models as models
 import torchvision.transforms as transforms
 import torch.optim as optim
 from dloader import ImgSongDataset
-from torch.utils import Dataloader
+from torch.utils.data import DataLoader
 from PIL import Image
 
 # Load Pretrained ResNet model
-model = models.resnet50(weights=True)
+model = models.resnet50(weights="IMAGENET1K_V2")
 model = torch.nn.Sequential(*list(model.children())[:-1])  # Remove classification layer
 
 num_song_features = 10
@@ -35,7 +35,7 @@ image_features = extract_features(r"G:\My Drive\YS - Images\aquarium aesthetic\0
 print(image_features.shape)  # Shape will be (2048,)
 
 dataset = ImgSongDataset(file_path ="", img_folder ="", transform = transform)
-dataloader = Dataloader(dataset, batch_size= 32, shuffle=True)
+dataloader = DataLoader(dataset, batch_size= 32, shuffle=True)
 
 
 #Training
