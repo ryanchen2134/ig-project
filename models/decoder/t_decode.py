@@ -220,6 +220,7 @@ def test_contrastive_model_with_paired_sample(model_paths, image_paths, song_fea
 
 def test_func():
     # Initialize a new model with random weights
+    
     model = ContrastiveImageSongModel(song_feature_dim=song_feature_dim, embedding_dim=embedding_dim)
 
     # Instead of loading weights, just use the randomly initialized model

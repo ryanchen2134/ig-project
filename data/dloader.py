@@ -4,8 +4,9 @@ import os
 import torch
 import torchvision.transforms as transforms
 from PIL import Image
+import ast  # For safely evaluating string representations of lists
 
-#Based on PyTorch documentation
+# Based on PyTorch documentation
 transform = transforms.Compose([
     transforms.Resize((224, 224)),
     transforms.ToTensor(),
@@ -15,26 +16,32 @@ transform = transforms.Compose([
 # Custom Dataset
 class ImgSongDataset(Dataset):
     def __init__(self, file_path, img_folder):
-        self.data = pd.read_csv(file_path, header = 0)
-        print(f"Loaded DataFrame:\n{self.data.head()}")  # Check the first few rows
+        self.data = pd.read_csv(file_path, header=0)
+        print(f"Loaded DataFrame with {len(self.data)} rows")
         self.img_folder = img_folder
         self.transform = transform
+        
+        # Parse the embedding strings to actual lists
+        self.data['embedding'] = self.data['embedding'].apply(ast.literal_eval)
 
     def __len__(self):
         return len(self.data)
 
     def __getitem__(self, index):
         img_name = self.data.iloc[index]['image_filename']
-        print(f"Loading Image: {img_name}")
-
-        img_path = os.path.join(self.img_folder, img_name)
-        #img_path = f"{self.img_folder}/{self.data.iloc[index, 0]}"
-        image = Image.open(img_path).convert('RGB')
-        if(self.transform):
-            image = self.transform(image)
-
-        #song_features = self.data.iloc[index]['song_feature_col1' : 'song_feature_colN'].values
-        song_features = self.data.iloc[index, 1:]  # Assuming columns starting from 1 to the end are features
-        song_features = pd.to_numeric(song_features, errors='coerce').fillna(0)  # Convert to numeric and replace NaN with 0
-        song_features = torch.tensor(song_features.values, dtype=torch.float32)  # Convert to tensor
-        return image, song_features
+        
+        # Load and transform image
+        img_path = os.path.join(self.img_folder, img_name + '.jpg')  # Adding file extension
+        try:
+            image = Image.open(img_path).convert('RGB')
+            if self.transform:
+                image = self.transform(image)
+        except FileNotFoundError:
+            print(f"Warning: Image not found at {img_path}")
+            # Create a blank image as fallback
+            image = torch.zeros((3, 224, 224))
+        
+        # Get embedding and convert to tensor
+        song_embeddings = torch.tensor(self.data.iloc[index]['embedding'], dtype=torch.float32)
+        
+        return image, song_embeddings
