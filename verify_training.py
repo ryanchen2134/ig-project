@@ -16,7 +16,7 @@ from data.dloader import ImgSongDataset
 from train import train_contrastive_model 
 
 # Set paths and hyperparameters
-data_path = "data/csv files/pairs_songencoded(1).csv"
+data_path = "data/new_encoded.csv"
 img_folder = "models/decoder/test_img"
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -35,7 +35,7 @@ def data_load():
 def mini_model():
     # Define parameters
     print("\n=== MINI MODEL TEST ===")
-    embedding_dim = 64
+    embedding_dim = 128
     learning_rate = 1e-5
     temperature = 0.07
     
@@ -56,7 +56,7 @@ def mini_model():
     subset_size = min(20, len(dataset))
     mini_indices = np.random.choice(len(dataset), size=subset_size, replace=False)
     mini_dataset = torch.utils.data.Subset(dataset, mini_indices)
-    mini_loader = DataLoader(mini_dataset, batch_size=10, shuffle=True)
+    mini_loader = DataLoader(mini_dataset, batch_size=batch_size, shuffle=True)
 
     # Set up minimal training
     mini_model = ContrastiveImageSongModel(song_embedding_dim=song_feature_dim, embedding_dim=embedding_dim).to(device)
@@ -65,6 +65,9 @@ def mini_model():
     # Run for just a few iterations
     mini_model.train()
     for epoch in range(10):
+        epoch_loss = 0.0
+        batch_count = 0
+        
         for images, song_features in mini_loader:
             images, song_features = images.to(device), song_features.to(device)
             mini_optimizer.zero_grad()
@@ -72,15 +75,36 @@ def mini_model():
             img_emb, song_emb = mini_model(images, song_features)
             loss = loss_fn(img_emb, song_emb)
             
-            print(f"Epoch {epoch}, Loss: {loss.item():.4f}")
+            # Optional: Uncomment if you want to see per-batch progress
+            # print(f"  Batch {batch_count}, Loss: {loss.item():.4f}")
             
             # Verify loss is decreasing across iterations
             loss.backward()
             mini_optimizer.step()
+            
+            epoch_loss += loss.item()
+            batch_count += 1
+        
+        # Print epoch summary
+        avg_epoch_loss = epoch_loss / batch_count
+        print(f"Epoch {epoch}, Average Loss: {avg_epoch_loss:.4f}")
 
 #Test no. 2
 def verify_data_loading():
     print("\n=== VERIFYING DATA LOADING ===")
+    # Use the paths defined at the top of your script
+    dataset = ImgSongDataset(
+        file_path=data_path,      # Use the existing variable instead of placeholder
+        img_folder=img_folder     # Use the existing variable instead of placeholder
+    )
+
+    # Create the DataLoader
+    train_loader = DataLoader(
+        dataset=dataset,
+        batch_size=4,
+        shuffle=True,
+        num_workers=2
+    )
     # Get a single batch
     images, song_features = next(iter(train_loader))
 
@@ -114,6 +138,16 @@ def verify_data_loading():
 def validate_embeddings():
     # Get a batch
     print("\n=== VALIDATING EMBEDDINGS ===")
+    # Create dataset and loader
+    dataset = ImgSongDataset(file_path=data_path, img_folder=img_folder)
+    train_loader = DataLoader(dataset, batch_size=4, shuffle=True)
+    
+    # Make sure model is defined
+    song_feature_dim = dataset[0][1].shape[0]
+    embedding_dim = 128  # Use same dimension as in mini_model
+    model = ContrastiveImageSongModel(song_embedding_dim=song_feature_dim, 
+                                     embedding_dim=embedding_dim).to(device)
+    
     images, song_features = next(iter(train_loader))
     images, song_features = images.to(device), song_features.to(device)
 
@@ -147,32 +181,80 @@ def validate_embeddings():
 def test_loss():
     print("\n=== VERIFYING LOSS FUNCTION ===")
     # Create controlled dummy embeddings
+    temperature = 0.07
     batch_size = 8
-    embed_dim = 128
-
+    embed_dim = 64
+    
+    # Initialize loss function
+    loss_fn = NTXentLoss(temperature=temperature, batch_size=batch_size)
+    
     # Case 1: Identical embeddings (perfect match)
-    identical_emb = F.normalize(torch.ones(batch_size, embed_dim), dim=1)
-    loss_identical = loss_fn(identical_emb, identical_emb)
-
+    # Use random vectors that are normalized, but each sample is identical to its pair
+    base = torch.randn(batch_size, embed_dim)
+    identical_a = F.normalize(base, dim=1)
+    identical_b = identical_a.clone()  # Exact same embeddings
+    loss_identical = loss_fn(identical_a, identical_b)
+    
     # Case 2: Orthogonal embeddings (no similarity)
-    a = F.normalize(torch.ones(batch_size, embed_dim), dim=1)
-    b = F.normalize(torch.ones(batch_size, embed_dim), dim=1)
-    # Make b orthogonal to a
-    b[:, :embed_dim//2] = -1
+    # Create truly orthogonal vectors
+    a = F.normalize(torch.randn(batch_size, embed_dim), dim=1)
+    b = F.normalize(torch.randn(batch_size, embed_dim), dim=1)
+    # Make b more orthogonal to a by subtracting the projection
+    for i in range(batch_size):
+        # Make b[i] more orthogonal to a[i]
+        projection = (b[i] @ a[i]) * a[i]
+        b[i] = b[i] - 2 * projection
+        b[i] = F.normalize(b[i], dim=0)  # Renormalize
+    
     loss_orthogonal = loss_fn(a, b)
-
+    
     # Case 3: Mixed similarity (partially similar)
     c = F.normalize(torch.randn(batch_size, embed_dim), dim=1)
-    d = F.normalize(torch.randn(batch_size, embed_dim), dim=1)
+    d = torch.zeros_like(c)
     # Make diagonal pairs more similar
     for i in range(batch_size):
-        d[i] = c[i] * 0.8 + d[i] * 0.2
-    d = F.normalize(d, dim=1)
+        # Create weighted combination (80% similar)
+        d[i] = 0.8 * c[i] + 0.2 * F.normalize(torch.randn(embed_dim), dim=0)
+        d[i] = F.normalize(d[i], dim=0)  # Ensure normalization
+    
     loss_mixed = loss_fn(c, d)
-
+    
+    # Print loss results
     print(f"Loss for identical embeddings: {loss_identical.item():.4f}")
     print(f"Loss for orthogonal embeddings: {loss_orthogonal.item():.4f}")
     print(f"Loss for mixed similarity: {loss_mixed.item():.4f}")
+    
+    # Debug: print similarity matrices
+    with torch.no_grad():
+        sim_identical = torch.matmul(identical_a, identical_b.T) / temperature
+        sim_orthogonal = torch.matmul(a, b.T) / temperature
+        sim_mixed = torch.matmul(c, d.T) / temperature
+        
+        print("\nSimilarity matrix statistics:")
+        
+        # Identical embeddings
+        diag_identical = torch.diag(sim_identical)
+        offdiag_identical = sim_identical.flatten()
+        offdiag_identical = offdiag_identical[~torch.eye(batch_size, dtype=bool).flatten()]
+        
+        print(f"Identical - diagonal values (should be high): {diag_identical.mean().item():.2f}")
+        print(f"Identical - off-diagonal values (should be lower): {offdiag_identical.mean().item():.2f}")
+        
+        # Orthogonal embeddings
+        diag_orthogonal = torch.diag(sim_orthogonal)
+        offdiag_orthogonal = sim_orthogonal.flatten()
+        offdiag_orthogonal = offdiag_orthogonal[~torch.eye(batch_size, dtype=bool).flatten()]
+        
+        print(f"Orthogonal - diagonal values (should be low): {diag_orthogonal.mean().item():.2f}")
+        print(f"Orthogonal - off-diagonal values: {offdiag_orthogonal.mean().item():.2f}")
+        
+        # Mixed similarity
+        diag_mixed = torch.diag(sim_mixed)
+        offdiag_mixed = sim_mixed.flatten()
+        offdiag_mixed = offdiag_mixed[~torch.eye(batch_size, dtype=bool).flatten()]
+        
+        print(f"Mixed - diagonal values (should be moderate): {diag_mixed.mean().item():.2f}")
+        print(f"Mixed - off-diagonal values: {offdiag_mixed.mean().item():.2f}")
 
 #Test no. 5
 def run_partial_training(portion=0.1, epochs=5):
@@ -232,8 +314,11 @@ def plot_overfitting_check(history):
 
 # Main verification sequence
 if __name__ == "__main__":
-    # data_load()
+    data_load()
     mini_model()
+    verify_data_loading()
+    validate_embeddings()
+    test_loss()
 
 #TEST NO 5
     # Run with increasing portions#

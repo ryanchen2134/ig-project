@@ -28,7 +28,7 @@ class ImgSongDataset(Dataset):
         return len(self.data)
 
     def __getitem__(self, index):
-        img_name = self.data.iloc[index]['image_filename']
+        img_name = self.data.iloc[index]['shortcode']
         
         # Load and transform image
         img_path = os.path.join(self.img_folder, img_name + '.jpg')  # Adding file extension

@@ -5,9 +5,9 @@ import mimetypes
 from urllib.parse import urlparse
 
 #Configuration
-csv_file_path ="data/csv files/pairs_songencoded(1).csv"
+csv_file_path ="data/new_encoded.csv"
 image_url_column = 'link'
-image_name_column = 'image_filename'
+image_name_column = 'shortcode'
 output_folder = 'models/decoder/test_img'
 
 df = pd.read_csv(csv_file_path)

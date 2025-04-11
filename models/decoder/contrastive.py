@@ -25,7 +25,7 @@ class ContrastiveImageSongModel(nn.Module):
         image_embeddings = self.image_encoder(images)
         #song_embeddings = self.song_encoder(song_features)
         projected_song_embeddings = F.normalize(self.song_projection(song_embeddings), p=2, dim=1)
-        return image_embeddings, song_embeddings
+        return image_embeddings, projected_song_embeddings
         
     def get_image_embedding(self, image):
         return self.image_encoder(image)
