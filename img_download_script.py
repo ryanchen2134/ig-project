@@ -8,7 +8,7 @@ from urllib.parse import urlparse
 csv_file_path ="data/new_encoded.csv"
 image_url_column = 'link'
 image_name_column = 'shortcode'
-output_folder = 'models/decoder/test_img'
+output_folder = 'data/img_folder'
 
 df = pd.read_csv(csv_file_path)
 

@@ -5,13 +5,15 @@ import torch.optim as optim
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
+import os
+import time
 
 # Import your model and dataset
 from models.decoder.contrastive import ContrastiveImageSongModel, NTXentLoss
 from data.dloader import ImgSongDataset
 
 def train_contrastive_model(model, train_loader, val_loader, optimizer, loss_fn, 
-                           num_epochs=50, patience=10, device='cuda'):
+                           num_epochs=50, patience=10, device='cuda', checkpoint_dir='checkpoints'):
     """
     Train the contrastive model
     
@@ -24,43 +26,57 @@ def train_contrastive_model(model, train_loader, val_loader, optimizer, loss_fn,
         num_epochs: Maximum number of epochs
         patience: Early stopping patience
         device: Device to train on
+        checkpoint_dir: Directory to save checkpoints
     
     Returns:
         model: Trained model
         history: Training history
     """
+    # Create checkpoint directory if it doesn't exist
+    os.makedirs(checkpoint_dir, exist_ok=True)
+    
     model = model.to(device)
     best_val_loss = float('inf')
     best_model = None
     no_improve_count = 0
+    best_epoch = 0
     
     train_losses = []
     val_losses = []
     
+    # Track training time
+    start_time = time.time()
+    
     for epoch in range(num_epochs):
+        epoch_start_time = time.time()
+        
         # Training phase
         model.train()
         train_loss = 0.0
         
-        for batch_idx, (images, song_embeddings) in enumerate(train_loader):  # Renamed variable
+        for batch_idx, (images, song_embeddings) in enumerate(train_loader):
             images = images.to(device)
-            song_embeddings = song_embeddings.to(device)  # Renamed variable
+            song_embeddings = song_embeddings.to(device)
             
             optimizer.zero_grad()
             
             # Forward pass
-            image_embeddings, projected_song_embeddings = model(images, song_embeddings)  # Updated variable name
+            image_embeddings, projected_song_embeddings = model(images, song_embeddings)
             
             # Calculate loss
-            loss = loss_fn(image_embeddings, projected_song_embeddings)  # Updated variable name
+            loss = loss_fn(image_embeddings, projected_song_embeddings)
             
             # Check for NaN/Inf
             if torch.isnan(loss) or torch.isinf(loss):
                 print(f"Warning: Training loss is {loss.item()}, stopping training")
-                return model, {'train_loss': train_losses, 'val_loss': val_losses}  # Added return to actually stop training
+                return model, {'train_loss': train_losses, 'val_loss': val_losses}
             
             # Backward pass and optimize
             loss.backward()
+            
+            # Add gradient clipping
+            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+            
             optimizer.step()
             
             train_loss += loss.item()
@@ -76,31 +92,47 @@ def train_contrastive_model(model, train_loader, val_loader, optimizer, loss_fn,
         val_loss = 0.0
         
         with torch.no_grad():
-            for images, song_embeddings in val_loader:  # Renamed variable
+            for images, song_embeddings in val_loader:
                 images = images.to(device)
-                song_embeddings = song_embeddings.to(device)  # Renamed variable
+                song_embeddings = song_embeddings.to(device)
                 
                 # Forward pass
-                image_embeddings, projected_song_embeddings = model(images, song_embeddings)  # Updated variable name
+                image_embeddings, projected_song_embeddings = model(images, song_embeddings)
                 
                 # Calculate loss
-                loss = loss_fn(image_embeddings, projected_song_embeddings)  # Updated variable name
+                loss = loss_fn(image_embeddings, projected_song_embeddings)
                 
                 if torch.isnan(loss) or torch.isinf(loss):
                     print(f"Warning: Validation loss is {loss.item()}, stopping training")
-                    return model, {'train_loss': train_losses, 'val_loss': val_losses}  # Added return to actually stop training
+                    return model, {'train_loss': train_losses, 'val_loss': val_losses}
                 
                 val_loss += loss.item()
         
         avg_val_loss = val_loss / len(val_loader)
         val_losses.append(avg_val_loss)
         
-        print(f"Epoch [{epoch+1}/{num_epochs}], Train Loss: {avg_train_loss:.4f}, Val Loss: {avg_val_loss:.4f}")
+        # Calculate epoch time
+        epoch_time = time.time() - epoch_start_time
+        
+        print(f"Epoch [{epoch+1}/{num_epochs}], Train Loss: {avg_train_loss:.4f}, Val Loss: {avg_val_loss:.4f}, Time: {epoch_time:.2f}s")
+        
+        # Save checkpoint every 10 epochs
+        if (epoch + 1) % 10 == 0:
+            checkpoint_path = os.path.join(checkpoint_dir, f'checkpoint_epoch_{epoch+1}.pth')
+            torch.save({
+                'epoch': epoch + 1,
+                'model_state_dict': model.state_dict(),
+                'optimizer_state_dict': optimizer.state_dict(),
+                'train_loss': train_losses,
+                'val_loss': val_losses,
+            }, checkpoint_path)
+            print(f"Checkpoint saved to {checkpoint_path}")
         
         # Early stopping check
         if avg_val_loss < best_val_loss:
             best_val_loss = avg_val_loss
             best_model = model.state_dict().copy()
+            best_epoch = epoch + 1
             no_improve_count = 0
             print(f"Validation loss improved to {avg_val_loss:.4f}")
         else:
@@ -114,24 +146,58 @@ def train_contrastive_model(model, train_loader, val_loader, optimizer, loss_fn,
     # Load best model
     model.load_state_dict(best_model)
     
+    # Save best model
+    best_model_path = os.path.join(checkpoint_dir, 'best_model.pth')
+    torch.save({
+        'epoch': best_epoch,
+        'model_state_dict': model.state_dict(),
+        'embedding_dim': model.embedding_dim,
+        'best_val_loss': best_val_loss
+    }, best_model_path)
+    print(f"Best model saved to {best_model_path}")
+    
+    # Print training summary
+    total_time = time.time() - start_time
+    print(f"\nTraining Summary:")
+    print(f"Total training time: {total_time:.2f} seconds")
+    print(f"Best validation loss: {best_val_loss:.4f} (achieved on epoch {best_epoch})")
+    
     history = {
         'train_loss': train_losses,
         'val_loss': val_losses,
-        'best_val_loss': best_val_loss
+        'best_val_loss': best_val_loss,
+        'best_epoch': best_epoch,
+        'total_time': total_time
     }
     
     return model, history
 
 def plot_training_history(history):
     """Plot training and validation loss"""
-    plt.figure(figsize=(10, 6))
+    plt.figure(figsize=(12, 8))
+    
+    plt.subplot(2, 1, 1)
     plt.plot(history['train_loss'], label='Training Loss')
     plt.plot(history['val_loss'], label='Validation Loss')
+    plt.axvline(x=history.get('best_epoch', 0) - 1, color='r', linestyle='--', label='Best Model')
     plt.xlabel('Epochs')
     plt.ylabel('Loss')
     plt.title('Contrastive Learning Training History')
     plt.legend()
     plt.grid(True, linestyle='--', alpha=0.7)
+    
+    # Plot loss on log scale to better see small changes
+    plt.subplot(2, 1, 2)
+    plt.semilogy(history['train_loss'], label='Training Loss')
+    plt.semilogy(history['val_loss'], label='Validation Loss')
+    plt.axvline(x=history.get('best_epoch', 0) - 1, color='r', linestyle='--', label='Best Model')
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss (log scale)')
+    plt.title('Loss (Logarithmic Scale)')
+    plt.legend()
+    plt.grid(True, linestyle='--', alpha=0.7)
+    
+    plt.tight_layout()
     plt.savefig('contrastive_training_history.png')
     plt.show()
 
@@ -154,34 +220,48 @@ if __name__ == "__main__":
     print(f"Using device: {device}")
     
     # Define your data paths here
-    data_path = "DISCO/song_csv/Lady Gaga-Die with a smile.csv"  # Update this
-    img_folder = "models/decoder/test_img"
+    data_path = "data/csv files/"  # CSV FILE PATH HERE
+    img_folder = "data/image_folder"
     
     # Create dataset
-    dataset = ImgSongDataset(data_path=data_path, img_folder=img_folder)
+    dataset = ImgSongDataset(file_path=data_path, img_folder=img_folder) 
     print(f"Dataset size: {len(dataset)}")
     
-    # Get song feature dimension from the first item
+    # Get song embedding dimension from the first item
     _, first_song_features = dataset[0]
-    song_embedding_dim = first_song_embedding.shape[0]
-    print(f"Song feature dimension: {song_embedding_dim}")
+    song_embedding_dim = first_song_features.shape[0]  
+    print(f"Song embedding dimension: {song_embedding_dim}")
     
     # Split dataset
     train_data, temp_data = train_test_split(dataset, test_size=0.2, random_state=42)
     val_data, test_data = train_test_split(temp_data, test_size=0.5, random_state=42)
     
-    # Create data loaders
-    train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True, num_workers=4)
-    val_loader = DataLoader(val_data, batch_size=batch_size, shuffle=False, num_workers=4)
-    test_loader = DataLoader(test_data, batch_size=batch_size, shuffle=False, num_workers=4)
+    print(f"Train set: {len(train_data)} samples")
+    print(f"Validation set: {len(val_data)} samples")
+    print(f"Test set: {len(test_data)} samples")
+    
+    # Create data loaders - adjust batch size if dataset is small
+    train_batch_size = min(batch_size, len(train_data))
+    val_batch_size = min(batch_size, len(val_data))
+    test_batch_size = min(batch_size, len(test_data))
+    
+    train_loader = DataLoader(train_data, batch_size=train_batch_size, shuffle=True, num_workers=4)
+    val_loader = DataLoader(val_data, batch_size=val_batch_size, shuffle=False, num_workers=4)
+    test_loader = DataLoader(test_data, batch_size=test_batch_size, shuffle=False, num_workers=4)
     
     # Initialize model
     model = ContrastiveImageSongModel(song_embedding_dim=song_embedding_dim, embedding_dim=embedding_dim)
     
     # Loss function and optimizer
-    loss_fn = NTXentLoss(temperature=temperature, batch_size=batch_size)
+    loss_fn = NTXentLoss(temperature=temperature, batch_size=train_batch_size)
     optimizer = optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
     
+    # Add learning rate scheduler
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(
+        optimizer, mode='min', factor=0.5, patience=5, verbose=True
+    )
+    
+    print("Starting training...")
     # Train the model
     trained_model, history = train_contrastive_model(
         model, train_loader, val_loader, optimizer, loss_fn, 
@@ -195,4 +275,20 @@ if __name__ == "__main__":
     torch.save(trained_model.state_dict(), 'contrastive_image_song_model.pth')
     
     print("Training completed and model saved!")
-
+    
+    # Optional: Evaluate on test set
+    print("\nEvaluating on test set...")
+    trained_model.eval()
+    test_loss = 0.0
+    
+    with torch.no_grad():
+        for images, song_embeddings in test_loader:
+            images = images.to(device)
+            song_embeddings = song_embeddings.to(device)
+            
+            image_embeddings, projected_song_embeddings = trained_model(images, song_embeddings)
+            loss = loss_fn(image_embeddings, projected_song_embeddings)
+            test_loss += loss.item()
+    
+    avg_test_loss = test_loss / len(test_loader)
+    print(f"Test Loss: {avg_test_loss:.4f}")

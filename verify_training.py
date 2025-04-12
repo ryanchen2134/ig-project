@@ -350,12 +350,12 @@ def plot_overfitting_check(history):
 
 # Main verification sequence
 if __name__ == "__main__":
-    #data_load()
-    #mini_model()
-    #verify_data_loading()
-    #validate_embeddings()
-    #test_loss()
-    run_partial_training()
+    data_load()
+    mini_model()
+    verify_data_loading()
+    validate_embeddings()
+    test_loss()
+    # run_partial_training()
 
 #TEST NO 5
     # Run with increasing portions#
