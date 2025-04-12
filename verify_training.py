@@ -258,18 +258,54 @@ def test_loss():
 
 #Test no. 5
 def run_partial_training(portion=0.1, epochs=5):
-    # Create a subset
-    subset_size = int(len(dataset) * portion)
-    indices = np.random.choice(len(dataset), size=subset_size, replace=False)
-    subset = torch.utils.data.Subset(dataset, indices)
-    subset_loader = DataLoader(subset, batch_size=batch_size, shuffle=True, num_workers=2)
+    #Define Parameters for Functions
+    embedding_dim = 128
+    learning_rate = 1e-5
+    weight_decay = 1e-5
+    temperature = 0.07
+
+    # Initialize Dataset
+    dataset = ImgSongDataset(file_path=data_path, img_folder=img_folder)
+    print(f"Full dataset size: {len(dataset)}")
+
+    # Get song embedding dim
+    _, first_song_features = dataset[0]
+    song_embedding_dim = first_song_features.shape[0]
+    print(f"Song embedding dimension: {song_embedding_dim}")
+
+    # Create a batch size
+    batch_size = min(8, len(dataset))
+
+    # Create a subset for training
+    subset_size = max(1, int(len(dataset) * portion))
+    print(f"Created training subset with {subset_size} samples ({portion*100:.1f}% of data)")
+
+    indicies = np.random.choice(len(dataset), size=subset_size, replace=False)
+    subset = torch.utils.data.Subset(dataset, indicies)
+
+    #Create a small validation set
+    val_size = min(len(dataset) - subset_size, max(1, int(len(dataset) * 0.1)))
+    print(f"Created validation subset with {val_size} samples")
+
+    remaining_indices = list(set(range(len(dataset))) - set(indicies))
+    val_indicies = np.random.choice(remaining_indices, size=val_size, replace=False) if remaining_indices else indicies
+    val_subset = torch.utils.data.Subset(dataset, val_indicies)
+
+    # Create DataLoader
+    subset_loader = DataLoader(subset, batch_size=min(batch_size, subset_size),
+                               shuffle=True, num_workers=2)
+    val_loader = DataLoader(val_subset, batch_size=min(batch_size, val_size),
+                               shuffle=False, num_workers=2)
     
-    # Create fresh model and optimizer
-    subset_model = ContrastiveImageSongModel(song_feature_dim=song_feature_dim, 
-                                            embedding_dim=embedding_dim).to(device)
+    #Create a Loss Function
+    loss_fn = NTXentLoss(temperature=temperature, batch_size=min(batch_size, subset_size))
+
+    # Model and Optimizer
+    subset_model = ContrastiveImageSongModel(song_embedding_dim=song_embedding_dim, embedding_dim=embedding_dim).to(device)
     subset_optimizer = optim.Adam(subset_model.parameters(), lr=learning_rate, weight_decay=weight_decay)
-    
-    # Train
+
+    # Training Loop
+    print(f"Starting training for {epochs} epochs...")
     start_time = time.time()
     subset_model, history = train_contrastive_model(
         subset_model, subset_loader, val_loader, subset_optimizer, loss_fn,
@@ -283,7 +319,7 @@ def run_partial_training(portion=0.1, epochs=5):
     else:
         memory_used = "N/A (CPU)"
     
-    print(f"Training with {portion*100}% data ({subset_size} samples):")
+    print(f"Training with {portion*100:.1f}% data ({subset_size} samples):")
     print(f"  Time taken: {train_time:.2f} seconds")
     print(f"  Max memory used: {memory_used} GB")
     print(f"  Final train loss: {history['train_loss'][-1]:.4f}")
@@ -314,11 +350,12 @@ def plot_overfitting_check(history):
 
 # Main verification sequence
 if __name__ == "__main__":
-    data_load()
-    mini_model()
-    verify_data_loading()
-    validate_embeddings()
-    test_loss()
+    #data_load()
+    #mini_model()
+    #verify_data_loading()
+    #validate_embeddings()
+    #test_loss()
+    run_partial_training()
 
 #TEST NO 5
     # Run with increasing portions#
