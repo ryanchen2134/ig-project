@@ -1,7 +1,7 @@
 hi guys!
 
 really cool project we are making.🤩🤩🤩🦎🦖🦕
-5 people - ryan 🦧,  michael 🦫, chaewon 🐅, divy :bird:, and brian 🦔
+5 people - ryan 🦧,  michael 🦫, chaewon 🐒, divy :bird:, and brian 🦔
 
 we created a model that can recommend (hopefully) the best song for any user inputted image. 
 the usage of this model shines in situations such as posting instagram stories and posts, where users tend to pick a song to post with it.
