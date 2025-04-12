@@ -6,19 +6,25 @@ import torch.nn.functional as F
 class ImageEncoder(nn.Module):
     def __init__(self, embedding_dim=128):
         super(ImageEncoder, self).__init__()
-        # Load pre-trained ResNet
-        resnet = models.resnet50(weights=models.ResNet50_Weights.IMAGENET1K_V2)
-        # Remove the classification head
-        self.backbone = nn.Sequential(*list(resnet.children())[:-1])
-        # Projection head to embedding space
+        # Loading pretrained ConvNeXt model
+        convnext = models.convnext_tiny(weights=models.ConvNeXt_Tiny_Weights.IMAGENET1K_V1)
+        
+        # Remove Classification Layer
+        self.backbone = convnext.features
+
+        # Feature Dim
+        self.feature_dim = 768
+
+        # Projection Layer
         self.projection = nn.Sequential(
+            nn.AdaptiveAvgPool2d(1),
             nn.Flatten(),
-            nn.Linear(2048, 512),
-            nn.BatchNorm1d(512),
+            nn.Linear(self.feature_dim, 512),
+            nn.BatchNorm1d(embedding_dim),
             nn.GELU(),
             nn.Linear(512, embedding_dim)
-        )
-        
+        )  
+
     def forward(self, x):
         features = self.backbone(x)
         embedding = self.projection(features)
