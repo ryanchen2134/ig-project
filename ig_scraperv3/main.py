@@ -59,6 +59,12 @@ async def scrape_instagram_posts(userhandle: str, max_posts: int, context, page)
     await page.wait_for_load_state("networkidle")
 
     total_posts = await get_total_posts(page)
+    if total_posts == float('inf'):
+        print(f"Something went horribly wrong.")
+        #crash program
+        raise ValueError(f"Failed to retrieve total posts for {userhandle}.")
+    
+
     scrape_limit = min(max_posts, total_posts)
     print(f"🔎 {userhandle}: Total posts {total_posts}, scraping up to {scrape_limit}...")
 
@@ -184,7 +190,7 @@ async def scrape_users_from_csv(csv_path: str, max_posts_per_user: int, output_j
 
 
         print("Beginning scraping...")
-        for user, idx in enumerate(usernames, start=1):
+        for idx, user in enumerate(usernames, start=1):
             if user in all_results:
                 print(f"⏩ Skipping {user} (already scraped) {idx}/ {USERNAMES_TOTAL}")
                 continue
