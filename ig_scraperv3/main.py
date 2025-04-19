@@ -160,6 +160,7 @@ async def scrape_users_from_csv(csv_path: str, max_posts_per_user: int, output_j
     else:
         all_results = {}
 
+    print("Launching browser...")
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=False)
         device = p.devices["Pixel 5"]
@@ -181,6 +182,8 @@ async def scrape_users_from_csv(csv_path: str, max_posts_per_user: int, output_j
             # with open("/home/asdf/ig-project/ig_scraperv3/.cookies.json", "w") as f:
                 json.dump(cookies, f)
 
+
+        print("Beginning scraping...")
         for user, idx in enumerate(usernames, start=1):
             if user in all_results:
                 print(f"⏩ Skipping {user} (already scraped) {idx}/ {USERNAMES_TOTAL}")
