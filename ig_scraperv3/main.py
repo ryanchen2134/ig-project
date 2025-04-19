@@ -142,16 +142,16 @@ async def scrape_users_from_csv(csv_path: str, max_posts_per_user: int, output_j
         context = await browser.new_context(**device)
         page = await context.new_page()
 
-        if os.path.exists("cookies.json"):
+        if os.path.exists(".cookies.json"):
             print("🔄 Loading cookies...")
-            with open("cookies.json", "r") as f:
+            with open(".cookies.json", "r") as f:
                 cookies = json.load(f)
             await context.add_cookies(cookies)
         else:
             print("🔐 Logging in...")
             await signon(page, username, password)
             cookies = await context.cookies()
-            with open("cookies.json", "w") as f:
+            with open(".cookies.json", "w") as f:
                 json.dump(cookies, f)
 
         for user in usernames:
@@ -173,4 +173,4 @@ async def scrape_users_from_csv(csv_path: str, max_posts_per_user: int, output_j
 import asyncio
 
 if __name__ == "__main__":
-    asyncio.run(scrape_users_from_csv("influencers_only_reversed.csv", max_posts_per_user=150, output_json="all_instagram_data.json"))
+    asyncio.run(scrape_users_from_csv("csv/influencers_only_reversed.csv", max_posts_per_user=150, output_json="json/all_instagram_data.json"))
