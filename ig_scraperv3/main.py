@@ -64,7 +64,11 @@ async def scrape_instagram_posts(userhandle: str, max_posts: int, context, page)
 
     unique_posts = {}
     scroll_attempts = 0
-    MAX_SCROLL_ATTEMPTS = 20
+    MAX_SCROLL_ATTEMPTS = 30
+
+    previous_unique_posts = 0
+    repeat_scroll_attempts = 0
+    REPEAT_SCROLL_ELEMENTS_LIMIT = 5
 
     while len(unique_posts) < scrape_limit and scroll_attempts < MAX_SCROLL_ATTEMPTS:
         candidate_elements = await page.query_selector_all("a:has(div._aagu)")
@@ -73,18 +77,26 @@ async def scrape_instagram_posts(userhandle: str, max_posts: int, context, page)
             if href and "/p/" in href and href not in unique_posts:
                 unique_posts[href] = None
 
-        # Break early if it seems we've hit the end of the user's posts
-        new_total = len(candidate_elements)
-        if new_total == 0 or len(unique_posts) >= total_posts:
-            print("📉 Reached end of available posts.")
-            break
+        # check if our last scroll resulted in new elements, if it has, incrementt repeat_scroll_elements_limit.
+        # if it has not for REPEAT_SCROLL_ELEMENTS_LIMIT times, we stop scrolling and just break
 
-        print(f"🔄 Scrolled {scroll_attempts + 1}x — Collected: {len(unique_posts)}")
+        if len(unique_posts) == previous_unique_posts:
+            repeat_scroll_attempts += 1
+            if repeat_scroll_attempts >= REPEAT_SCROLL_ELEMENTS_LIMIT:
+                print(f"🛑 No new posts found after {REPEAT_SCROLL_ELEMENTS_LIMIT} scrolls. Stopping.")
+                break
+        else:
+            repeat_scroll_attempts = 0
+
+
+        print(f"🔄 Scrolled {scroll_attempts + 1}x / {MAX_SCROLL_ATTEMPTS} — Collected: {len(unique_posts)}, Waivering: {repeat_scroll_attempts} / {REPEAT_SCROLL_ELEMENTS_LIMIT}")
         if len(unique_posts) >= scrape_limit:
             break
         await page.evaluate("window.scrollTo(0, document.body.scrollHeight);")
         await asyncio.sleep(1.5)
         scroll_attempts += 1
+
+        previous_unique_posts = len(unique_posts)
 
 
     post_hrefs = list(unique_posts.keys())[:scrape_limit]
@@ -105,6 +117,15 @@ async def scrape_instagram_posts(userhandle: str, max_posts: int, context, page)
 
             response = await response_info.value
             data = await response.json()
+
+
+
+
+
+            ###### FROM HERE ASSUMMING THE DATA IS IN VALID FORMAT ######
+
+
+
 
             # Check the post timestamp
             timestamp = data.get("items", [{}])[0].get("taken_at")
@@ -130,6 +151,9 @@ async def scrape_users_from_csv(csv_path: str, max_posts_per_user: int, output_j
     df = pd.read_csv(csv_path, header=None)
     usernames = df[0].dropna().unique().tolist()
 
+    USERNAMES_TOTAL = len(usernames)
+    print(f"👥 Found {USERNAMES_TOTAL} unique usernames to scrape.")
+
     if os.path.exists(output_json):
         with open(output_json, 'r') as f:
             all_results = json.load(f)
@@ -143,8 +167,10 @@ async def scrape_users_from_csv(csv_path: str, max_posts_per_user: int, output_j
         page = await context.new_page()
 
         if os.path.exists(".cookies.json"):
+        # if os.path.exists("/home/asdf/ig-project/ig_scraperv3/.cookies.json"):
             print("🔄 Loading cookies...")
             with open(".cookies.json", "r") as f:
+            # with open("/home/asdf/ig-project/ig_scraperv3/.cookies.json", "r") as f:
                 cookies = json.load(f)
             await context.add_cookies(cookies)
         else:
@@ -152,11 +178,12 @@ async def scrape_users_from_csv(csv_path: str, max_posts_per_user: int, output_j
             await signon(page, username, password)
             cookies = await context.cookies()
             with open(".cookies.json", "w") as f:
+            # with open("/home/asdf/ig-project/ig_scraperv3/.cookies.json", "w") as f:
                 json.dump(cookies, f)
 
-        for user in usernames:
+        for user, idx in enumerate(usernames, start=1):
             if user in all_results:
-                print(f"⏩ Skipping {user} (already scraped)")
+                print(f"⏩ Skipping {user} (already scraped) {idx}/ {USERNAMES_TOTAL}")
                 continue
             try:
                 result = await scrape_instagram_posts(user, max_posts_per_user, context, page)
@@ -164,7 +191,7 @@ async def scrape_users_from_csv(csv_path: str, max_posts_per_user: int, output_j
                 with open(output_json, 'w') as f:
                     json.dump(all_results, f, indent=2)
             except Exception as e:
-                print(f"❌ Error scraping {user}: {e}")
+                print(f"❌ Error scraping {user} ({idx}/ {USERNAMES_TOTAL}): {e}")
 
         await browser.close()
         print(f"\n✅ All scraping complete. Results saved to {output_json}")
@@ -174,3 +201,4 @@ import asyncio
 
 if __name__ == "__main__":
     asyncio.run(scrape_users_from_csv("csv/influencers_only_reversed.csv", max_posts_per_user=150, output_json="json/all_instagram_data.json"))
+    # asyncio.run(scrape_users_from_csv("/home/asdf/ig-project/ig_scraperv3/csv/influencers_only_reversed.csv", max_posts_per_user=150, output_json="/home/asdf/ig-project/ig_scraperv3/json/all_instagram_data.json"))
