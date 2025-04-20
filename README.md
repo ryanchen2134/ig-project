@@ -1,4 +1,4 @@
-hi guys!
+👋👋 hi guys!
 
 really cool project we are making.🤩🤩🤩🦎🦖🦕
 5 people - ryan 🦧,  michael 🦫, chaewon 🐒, divy :bird:, and brian 🦔
