@@ -20,7 +20,7 @@ class ImageEncoder(nn.Module):
             nn.AdaptiveAvgPool2d(1),
             nn.Flatten(),
             nn.Linear(self.feature_dim, 512),
-            nn.BatchNorm1d(embedding_dim),
+            nn.BatchNorm1d(512),
             nn.GELU(),
             nn.Linear(512, embedding_dim)
         )  
