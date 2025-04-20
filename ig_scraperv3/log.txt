@@ -1,0 +1,540 @@
+Starting scraping...
+👥 Found 803 unique usernames to scrape.
+Launching browser...
+🔄 Loading cookies...
+🔄 Cookies already saved or not needed.
+Beginning scraping...
+⏩ Skipping reubsfits (already scraped) 1/ 803
+⏩ Skipping chiprooma (already scraped) 2/ 803
+⏩ Skipping trentinvuong (already scraped) 3/ 803
+⏩ Skipping zaycamm (already scraped) 4/ 803
+⏩ Skipping jakewebber9 (already scraped) 5/ 803
+⏩ Skipping christophersturniolo (already scraped) 6/ 803
+⏩ Skipping nicolassturniolo (already scraped) 7/ 803
+⏩ Skipping julesleblanc (already scraped) 8/ 803
+⏩ Skipping erikamtitus (already scraped) 9/ 803
+⏩ Skipping kirstentitus (already scraped) 10/ 803
+⏩ Skipping imnotningning (already scraped) 11/ 803
+⏩ Skipping aerichandesu (already scraped) 12/ 803
+⏩ Skipping imwinter (already scraped) 13/ 803
+⏩ Skipping katarinabluu (already scraped) 14/ 803
+⏩ Skipping katiefang (already scraped) 15/ 803
+⏩ Skipping asxpliu (already scraped) 16/ 803
+⏩ Skipping erica.ha (already scraped) 17/ 803
+⏩ Skipping lee__range (already scraped) 18/ 803
+⏩ Skipping kisy0729 (already scraped) 19/ 803
+⏩ Skipping yrui.rm (already scraped) 20/ 803
+⏩ Skipping reinyourheart (already scraped) 21/ 803
+⏩ Skipping 0.25__h (already scraped) 22/ 803
+⏩ Skipping akeri.homura (already scraped) 23/ 803
+⏩ Skipping yeeuniss (already scraped) 24/ 803
+⏩ Skipping byunjjii (already scraped) 25/ 803
+⏩ Skipping room__501 (already scraped) 26/ 803
+⏩ Skipping yuinniy (already scraped) 27/ 803
+⏩ Skipping zzangtomo (already scraped) 28/ 803
+⏩ Skipping leehongzu (already scraped) 29/ 803
+⏩ Skipping killuada (already scraped) 30/ 803
+⏩ Skipping hxnjxxu (already scraped) 31/ 803
+⏩ Skipping ggwonnaa (already scraped) 32/ 803
+⏩ Skipping nueisuu (already scraped) 33/ 803
+⏩ Skipping thumbgood (already scraped) 34/ 803
+⏩ Skipping ovxiiii (already scraped) 35/ 803
+⏩ Skipping di.ndin (already scraped) 36/ 803
+⏩ Skipping xy_xul127 (already scraped) 37/ 803
+⏩ Skipping all_zero._.k (already scraped) 38/ 803
+⏩ Skipping yeonlechexe (already scraped) 39/ 803
+⏩ Skipping jiwoo.o_1 (already scraped) 40/ 803
+⏩ Skipping _sxxyeon_ (already scraped) 41/ 803
+⏩ Skipping uuuuuuu_haru (already scraped) 42/ 803
+⏩ Skipping i0c0i (already scraped) 43/ 803
+⏩ Skipping demitrakalogeras (already scraped) 44/ 803
+⏩ Skipping emilyy.haa (already scraped) 45/ 803
+⏩ Skipping sarang.hoe (already scraped) 46/ 803
+⏩ Skipping ju1iama (already scraped) 47/ 803
+⏩ Skipping yifan.liii (already scraped) 48/ 803
+⏩ Skipping shirleypunn (already scraped) 49/ 803
+⏩ Skipping hwriyu (already scraped) 50/ 803
+⏩ Skipping joycee.e (already scraped) 51/ 803
+⏩ Skipping hunnej (already scraped) 52/ 803
+⏩ Skipping juliama (already scraped) 53/ 803
+⏩ Skipping hjevelyn (already scraped) 54/ 803
+🔍 Scraping seb1nnn (55/ 803)...
+🔎 seb1nnn: Total posts 163, scraping up to 150...
+🔄 Scrolled 1x / 30 — Collected: 22, Waivering: 0 / 5
+🔄 Scrolled 2x / 30 — Collected: 32, Waivering: 0 / 5
+🔄 Scrolled 3x / 30 — Collected: 42, Waivering: 0 / 5
+🔄 Scrolled 4x / 30 — Collected: 51, Waivering: 0 / 5
+🔄 Scrolled 5x / 30 — Collected: 51, Waivering: 1 / 5
+🔄 Scrolled 6x / 30 — Collected: 63, Waivering: 0 / 5
+🔄 Scrolled 7x / 30 — Collected: 75, Waivering: 0 / 5
+🔄 Scrolled 8x / 30 — Collected: 87, Waivering: 0 / 5
+🔄 Scrolled 9x / 30 — Collected: 99, Waivering: 0 / 5
+🔄 Scrolled 10x / 30 — Collected: 110, Waivering: 0 / 5
+🔄 Scrolled 11x / 30 — Collected: 122, Waivering: 0 / 5
+🔄 Scrolled 12x / 30 — Collected: 122, Waivering: 1 / 5
+🔄 Scrolled 13x / 30 — Collected: 133, Waivering: 0 / 5
+🔄 Scrolled 14x / 30 — Collected: 133, Waivering: 1 / 5
+🔄 Scrolled 15x / 30 — Collected: 145, Waivering: 0 / 5
+🔄 Scrolled 16x / 30 — Collected: 152, Waivering: 0 / 5
+📝 Intercepting posts (cutoff: 2023-01-01)...
+idx=149  looking for semaphore
+idx=149  got permit
+idx=125  looking for semaphore
+idx=125  got permit
+idx=16  looking for semaphore
+idx=16  got permit
+idx=95  looking for semaphore
+idx=95  got permit
+idx=67  looking for semaphore
+idx=67  got permit
+idx=84  looking for semaphore
+idx=82  looking for semaphore
+idx=114  looking for semaphore
+idx=27  looking for semaphore
+idx=70  looking for semaphore
+idx=139  looking for semaphore
+idx=5  looking for semaphore
+idx=86  looking for semaphore
+idx=52  looking for semaphore
+idx=102  looking for semaphore
+idx=45  looking for semaphore
+idx=6  looking for semaphore
+idx=81  looking for semaphore
+idx=118  looking for semaphore
+idx=8  looking for semaphore
+idx=3  looking for semaphore
+idx=121  looking for semaphore
+idx=44  looking for semaphore
+idx=149  released permit
+idx=84  got permit
+❌ Error scraping seb1nnn (55/ 803): Page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at https://www.instagram.com/seb1nnn/p/Cq-w_FYPJ61/?img_index=1
+Call log:
+  - navigating to "https://www.instagram.com/seb1nnn/p/Cq-w_FYPJ61/?img_index=1", waiting until "load"
+
+🔍 Scraping yxuuzx (56/ 803)...
+idx=66  looking for semaphore
+idx=96  looking for semaphore
+idx=91  looking for semaphore
+idx=20  looking for semaphore
+idx=55  looking for semaphore
+idx=16  released permit
+idx=82  got permit
+idx=125  released permit
+idx=114  got permit
+idx=94  looking for semaphore
+idx=95  released permit
+idx=27  got permit
+idx=49  looking for semaphore
+idx=67  released permit
+idx=70  got permit
+idx=35  looking for semaphore
+idx=59  looking for semaphore
+idx=145  looking for semaphore
+idx=144  looking for semaphore
+idx=72  looking for semaphore
+idx=117  looking for semaphore
+idx=51  looking for semaphore
+idx=147  looking for semaphore
+idx=26  looking for semaphore
+idx=63  looking for semaphore
+idx=134  looking for semaphore
+idx=43  looking for semaphore
+idx=61  looking for semaphore
+idx=142  looking for semaphore
+idx=137  looking for semaphore
+idx=69  looking for semaphore
+idx=103  looking for semaphore
+idx=124  looking for semaphore
+idx=108  looking for semaphore
+idx=84  released permit
+idx=139  got permit
+idx=73  looking for semaphore
+idx=106  looking for semaphore
+idx=48  looking for semaphore
+idx=114  released permit
+idx=5  got permit
+idx=123  looking for semaphore
+idx=27  released permit
+idx=86  got permit
+idx=82  released permit
+idx=52  got permit
+idx=70  released permit
+idx=102  got permit
+idx=42  looking for semaphore
+idx=130  looking for semaphore
+idx=140  looking for semaphore
+idx=90  looking for semaphore
+idx=47  looking for semaphore
+idx=54  looking for semaphore
+idx=141  looking for semaphore
+idx=36  looking for semaphore
+idx=110  looking for semaphore
+idx=146  looking for semaphore
+idx=28  looking for semaphore
+idx=111  looking for semaphore
+idx=88  looking for semaphore
+idx=50  looking for semaphore
+idx=4  looking for semaphore
+idx=2  looking for semaphore
+idx=128  looking for semaphore
+idx=62  looking for semaphore
+idx=58  looking for semaphore
+idx=126  looking for semaphore
+idx=21  looking for semaphore
+idx=18  looking for semaphore
+idx=29  looking for semaphore
+idx=139  released permit
+idx=45  got permit
+idx=19  looking for semaphore
+idx=37  looking for semaphore
+idx=23  looking for semaphore
+idx=115  looking for semaphore
+idx=86  released permit
+idx=6  got permit
+idx=5  released permit
+idx=81  got permit
+idx=100  looking for semaphore
+idx=52  released permit
+idx=118  got permit
+idx=60  looking for semaphore
+idx=102  released permit
+idx=8  got permit
+idx=129  looking for semaphore
+idx=38  looking for semaphore
+idx=10  looking for semaphore
+idx=87  looking for semaphore
+idx=1  looking for semaphore
+idx=45  released permit
+idx=3  got permit
+idx=9  looking for semaphore
+idx=99  looking for semaphore
+idx=132  looking for semaphore
+idx=150  looking for semaphore
+idx=11  looking for semaphore
+idx=64  looking for semaphore
+idx=57  looking for semaphore
+idx=6  released permit
+idx=121  got permit
+idx=74  looking for semaphore
+idx=80  looking for semaphore
+idx=13  looking for semaphore
+idx=127  looking for semaphore
+idx=81  released permit
+idx=44  got permit
+idx=83  looking for semaphore
+idx=116  looking for semaphore
+idx=97  looking for semaphore
+idx=118  released permit
+idx=66  got permit
+idx=8  released permit
+idx=96  got permit
+idx=135  looking for semaphore
+idx=92  looking for semaphore
+idx=24  looking for semaphore
+idx=112  looking for semaphore
+idx=89  looking for semaphore
+idx=3  released permit
+idx=91  got permit
+idx=25  looking for semaphore
+idx=17  looking for semaphore
+idx=32  looking for semaphore
+idx=138  looking for semaphore
+idx=148  looking for semaphore
+idx=122  looking for semaphore
+idx=53  looking for semaphore
+idx=31  looking for semaphore
+idx=7  looking for semaphore
+idx=30  looking for semaphore
+idx=105  looking for semaphore
+idx=78  looking for semaphore
+idx=22  looking for semaphore
+idx=15  looking for semaphore
+idx=44  released permit
+idx=20  got permit
+idx=101  looking for semaphore
+idx=107  looking for semaphore
+idx=76  looking for semaphore
+idx=136  looking for semaphore
+idx=121  released permit
+idx=55  got permit
+idx=41  looking for semaphore
+idx=104  looking for semaphore
+idx=96  released permit
+idx=94  got permit
+idx=40  looking for semaphore
+idx=93  looking for semaphore
+idx=66  released permit
+idx=49  got permit
+idx=77  looking for semaphore
+idx=14  looking for semaphore
+idx=68  looking for semaphore
+idx=33  looking for semaphore
+idx=91  released permit
+idx=35  got permit
+idx=34  looking for semaphore
+idx=113  looking for semaphore
+idx=98  looking for semaphore
+idx=39  looking for semaphore
+idx=71  looking for semaphore
+idx=20  released permit
+idx=59  got permit
+idx=120  looking for semaphore
+idx=46  looking for semaphore
+idx=12  looking for semaphore
+idx=94  released permit
+idx=145  got permit
+idx=56  looking for semaphore
+idx=55  released permit
+idx=144  got permit
+idx=79  looking for semaphore
+idx=131  looking for semaphore
+idx=49  released permit
+idx=72  got permit
+idx=85  looking for semaphore
+idx=119  looking for semaphore
+idx=143  looking for semaphore
+idx=109  looking for semaphore
+idx=133  looking for semaphore
+idx=35  released permit
+idx=117  got permit
+idx=65  looking for semaphore
+idx=75  looking for semaphore
+idx=144  released permit
+idx=51  got permit
+idx=72  released permit
+idx=147  got permit
+idx=59  released permit
+idx=26  got permit
+idx=145  released permit
+idx=63  got permit
+idx=117  released permit
+idx=134  got permit
+idx=51  released permit
+idx=43  got permit
+idx=147  released permit
+idx=61  got permit
+idx=26  released permit
+idx=142  got permit
+idx=134  released permit
+idx=137  got permit
+idx=63  released permit
+idx=69  got permit
+idx=43  released permit
+idx=103  got permit
+idx=61  released permit
+idx=124  got permit
+idx=142  released permit
+idx=108  got permit
+idx=137  released permit
+idx=73  got permit
+idx=69  released permit
+idx=106  got permit
+idx=103  released permit
+idx=48  got permit
+idx=124  released permit
+idx=123  got permit
+idx=108  released permit
+idx=42  got permit
+idx=73  released permit
+idx=130  got permit
+idx=106  released permit
+idx=140  got permit
+idx=48  released permit
+idx=90  got permit
+idx=123  released permit
+idx=47  got permit
+idx=140  released permit
+idx=54  got permit
+idx=42  released permit
+idx=141  got permit
+idx=130  released permit
+idx=36  got permit
+idx=90  released permit
+idx=110  got permit
+idx=47  released permit
+idx=146  got permit
+idx=54  released permit
+idx=28  got permit
+idx=141  released permit
+idx=111  got permit
+idx=146  released permit
+idx=88  got permit
+idx=36  released permit
+idx=50  got permit
+idx=110  released permit
+idx=4  got permit
+idx=28  released permit
+idx=2  got permit
+idx=111  released permit
+idx=128  got permit
+idx=88  released permit
+idx=62  got permit
+idx=50  released permit
+idx=58  got permit
+idx=4  released permit
+idx=126  got permit
+idx=2  released permit
+idx=21  got permit
+idx=62  released permit
+idx=18  got permit
+idx=126  released permit
+idx=29  got permit
+idx=128  released permit
+idx=19  got permit
+idx=58  released permit
+idx=37  got permit
+idx=21  released permit
+idx=23  got permit
+idx=18  released permit
+idx=115  got permit
+idx=29  released permit
+idx=100  got permit
+idx=37  released permit
+idx=60  got permit
+idx=19  released permit
+idx=129  got permit
+idx=23  released permit
+idx=38  got permit
+idx=115  released permit
+idx=10  got permit
+idx=100  released permit
+idx=87  got permit
+idx=60  released permit
+idx=1  got permit
+idx=129  released permit
+idx=9  got permit
+idx=38  released permit
+idx=99  got permit
+idx=10  released permit
+idx=132  got permit
+idx=87  released permit
+idx=150  got permit
+idx=1  released permit
+idx=11  got permit
+idx=9  released permit
+idx=64  got permit
+idx=99  released permit
+idx=57  got permit
+idx=132  released permit
+idx=74  got permit
+idx=150  released permit
+idx=80  got permit
+idx=64  released permit
+idx=13  got permit
+idx=11  released permit
+idx=127  got permit
+idx=57  released permit
+idx=83  got permit
+idx=74  released permit
+idx=116  got permit
+idx=80  released permit
+idx=97  got permit
+idx=13  released permit
+idx=135  got permit
+idx=127  released permit
+idx=92  got permit
+idx=83  released permit
+idx=24  got permit
+idx=116  released permit
+idx=112  got permit
+idx=97  released permit
+idx=89  got permit
+idx=135  released permit
+idx=25  got permit
+idx=92  released permit
+idx=17  got permit
+idx=112  released permit
+idx=32  got permit
+idx=24  released permit
+idx=138  got permit
+idx=89  released permit
+idx=148  got permit
+idx=25  released permit
+idx=122  got permit
+idx=17  released permit
+idx=53  got permit
+idx=32  released permit
+idx=31  got permit
+idx=138  released permit
+idx=7  got permit
+idx=148  released permit
+idx=30  got permit
+idx=122  released permit
+idx=105  got permit
+idx=53  released permit
+idx=78  got permit
+idx=7  released permit
+idx=22  got permit
+idx=31  released permit
+idx=15  got permit
+idx=30  released permit
+idx=101  got permit
+idx=105  released permit
+idx=107  got permit
+idx=78  released permit
+idx=76  got permit
+idx=15  released permit
+idx=136  got permit
+idx=22  released permit
+idx=41  got permit
+idx=101  released permit
+idx=104  got permit
+idx=107  released permit
+idx=40  got permit
+idx=76  released permit
+idx=93  got permit
+idx=136  released permit
+idx=77  got permit
+idx=41  released permit
+idx=14  got permit
+idx=40  released permit
+idx=68  got permit
+idx=104  released permit
+idx=33  got permit
+idx=93  released permit
+idx=34  got permit
+idx=14  released permit
+idx=113  got permit
+idx=77  released permit
+idx=98  got permit
+idx=68  released permit
+idx=39  got permit
+idx=33  released permit
+idx=71  got permit
+idx=34  released permit
+idx=120  got permit
+idx=98  released permit
+idx=46  got permit
+idx=39  released permit
+idx=12  got permit
+idx=71  released permit
+idx=56  got permit
+idx=120  released permit
+idx=79  got permit
+idx=46  released permit
+idx=131  got permit
+idx=12  released permit
+idx=85  got permit
+idx=56  released permit
+idx=119  got permit
+idx=79  released permit
+idx=143  got permit
+idx=131  released permit
+idx=109  got permit
+idx=85  released permit
+idx=133  got permit
+idx=119  released permit
+idx=65  got permit
+idx=143  released permit
+idx=75  got permit
+🔎 yxuuzx: Total posts 313, scraping up to 150...
+idx=109  released permit
+idx=133  released permit
+idx=65  released permit
+idx=75  released permit
+🔄 Scrolled 1x / 30 — Collected: 16, Waivering: 0 / 5
+idx=113  released permit
+🔄 Scrolled 2x / 30 — Collected: 28, Waivering: 0 / 5
+🔄 Scrolled 3x / 30 — Collected: 38, Waivering: 0 / 5
+🔄 Scrolled 4x / 30 — Collected: 45, Waivering: 0 / 5
+🔄 Scrolled 5x / 30 — Collected: 57, Waivering: 0 / 5

@@ -19,16 +19,16 @@ password = os.getenv("PASSWORD")
 
 # Asyncio settings
 # Set the maximum number of concurrent pages
-MAX_PARALLEL_PAGES = 5 
+MAX_PARALLEL_PAGES = 2
 # Set the range for random jitter
 # This is used to add a random delay before each request to avoid being blocked
-JITTER_RANGE = (0.1, 0.4)
+JITTER_RANGE = (1, 2)
 
 
 MAX_SCROLL_ATTEMPTS = 30
 REPEAT_SCROLL_ELEMENTS_LIMIT = 5
 
-sem = asyncio.Semaphore(MAX_PARALLEL_PAGES)
+GLOBAL_SEM = asyncio.Semaphore(MAX_PARALLEL_PAGES)
 
 ############################
 
@@ -135,7 +135,8 @@ async def scrape_instagram_posts(userhandle: str, max_posts: int, context, page)
     CUTOFF_DATE = datetime(2023, 1, 1)
     print(f"📝 Intercepting posts (cutoff: {CUTOFF_DATE.date()})...")
 
-    # INDIVIDUAL POST SCRAPING
+    ######################     INDIVIDUAL POST SCRAPING     ##########################
+
     # Iterate over the post links and fetch data (ACTUAL SCRAPING)
 
     # This is where the parallel scraping happens.         (FAN OUT)
@@ -148,7 +149,7 @@ async def scrape_instagram_posts(userhandle: str, max_posts: int, context, page)
     #triggered if cutoff date is reached
     early_stop = False
 
-
+    # Iterate over the tasks as they complete (FAN IN) ######################3
     for fut in asyncio.as_completed(tasks):
         idx, href, data, pdate = await fut
 
@@ -189,15 +190,23 @@ async def _fetch_one(context, href, idx, total):
     # Random jitter to avoid being blocked
     jitter = random.uniform(JITTER_RANGE[0], JITTER_RANGE[1])
     await asyncio.sleep(jitter)
-    async with sem:                             # ① blocks if >MAX tabs open
+
+    print(f"{idx=}  looking for semaphore")  
+
+    async with GLOBAL_SEM:                             # ① blocks if >MAX tabs open
+
+        print(f"{idx=}  got permit")  
+
         page = await context.new_page()         # ② tab is created **inside**
         try:
             async with page.expect_response(
                 lambda r: "/api/v1/media/" in r.url and "/info/" in r.url,
                 timeout=5_000
+                # timeout = 60_000
             ) as resp_info:
-                await page.goto(f"https://www.instagram.com{href}")
+                await page.goto(f"https://www.instagram.com{href}?img_index=1")
 
+            print(f"Response received for {idx} ({href})")
             resp  = await resp_info.value
             data  = await resp.json()
 
@@ -208,9 +217,16 @@ async def _fetch_one(context, href, idx, total):
         except TimeoutError:
             print(f"⏱️ Timeout: {href}")
             return idx, href, None, None
+        
+        except Exception as e:
+            print(f"❌ Error fetching {href}: {e}")
+            # wait for a bit before retrying (with jitter)
+            await asyncio.sleep(jitter+3)
+            return idx, href, None, None
 
         finally:
             await page.close()                  # ③ tab closed, permit released
+            print(f"{idx=}  released permit")
 
 # Batch scrape users from a CSV and save to JSON
 async def scrape_users_from_csv(csv_path: str, max_posts_per_user: int, output_json: str):
@@ -226,6 +242,7 @@ async def scrape_users_from_csv(csv_path: str, max_posts_per_user: int, output_j
     else:
         all_results = {}
 
+    #############  Launch browser #############
     print("Launching browser...")
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=False)
@@ -243,10 +260,23 @@ async def scrape_users_from_csv(csv_path: str, max_posts_per_user: int, output_j
         else:
             print("🔐 Logging in...")
             await signon(page, username, password)
-            cookies = await context.cookies()
-            # with open(".cookies.json", "w") as f:
-            with open("/home/asdf/ig-project/ig_scraperv3/.cookies.json", "w") as f:
-                json.dump(cookies, f)
+            
+        cookies = await context.cookies()
+        # with open(".cookies.json", "w") as f:
+        with open("/home/asdf/ig-project/ig_scraperv3/.cookies.json", "w") as f:
+            json.dump(cookies, f)
+
+
+        try:
+            # Save cookies to a file in case we're asked again despite being logged in already
+            await page.wait_for_selector("span:has-text('Save info')", timeout=5000)
+            # Click the button
+            await page.click("span:has-text('Save info')", timeout=1000)
+            #wait for networkidle
+            await page.wait_for_load_state("networkidle")
+        except TimeoutError:
+            print("🔄 Cookies already saved or not needed.")
+
 
 
         print("Beginning scraping...")
