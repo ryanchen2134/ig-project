@@ -5,11 +5,32 @@ import pandas as pd
 from datetime import datetime
 from playwright.async_api import async_playwright, TimeoutError
 from dotenv import load_dotenv
+import random
+
+########## CONFIGURATION ##########
+
+#set seed to unix timestamp
+random.seed(int(datetime.now().timestamp()))
 
 # Load environment variables
 load_dotenv(override=True)
 username = os.getenv("USERNAME")
 password = os.getenv("PASSWORD")
+
+# Asyncio settings
+# Set the maximum number of concurrent pages
+MAX_PARALLEL_PAGES = 2
+# Set the range for random jitter
+# This is used to add a random delay before each request to avoid being blocked
+JITTER_RANGE = (1, 2)
+
+
+MAX_SCROLL_ATTEMPTS = 30
+REPEAT_SCROLL_ELEMENTS_LIMIT = 5
+
+GLOBAL_SEM = asyncio.Semaphore(MAX_PARALLEL_PAGES)
+
+############################
 
 # Define login function
 async def signon(page, username, password):
@@ -70,16 +91,19 @@ async def scrape_instagram_posts(userhandle: str, max_posts: int, context, page)
 
     unique_posts = {}
     scroll_attempts = 0
-    MAX_SCROLL_ATTEMPTS = 30
-
+    
     previous_unique_posts = 0
     repeat_scroll_attempts = 0
-    REPEAT_SCROLL_ELEMENTS_LIMIT = 5
 
+
+
+    # Scroll and collect post links
     while len(unique_posts) < scrape_limit and scroll_attempts < MAX_SCROLL_ATTEMPTS:
         candidate_elements = await page.query_selector_all("a:has(div._aagu)")
         for element in candidate_elements:
             href = await element.get_attribute("href")
+            # Check if href is not None and contains "/p/"
+            # and if it is not already in unique_posts
             if href and "/p/" in href and href not in unique_posts:
                 unique_posts[href] = None
 
@@ -111,46 +135,98 @@ async def scrape_instagram_posts(userhandle: str, max_posts: int, context, page)
     CUTOFF_DATE = datetime(2023, 1, 1)
     print(f"📝 Intercepting posts (cutoff: {CUTOFF_DATE.date()})...")
 
-    for i, href in enumerate(post_hrefs, start=1):
-        post_url = f"https://www.instagram.com{href}"
-        new_page = await context.new_page()
-        try:
-            async with new_page.expect_response(
-                lambda response: "/api/v1/media/" in response.url and "/info/" in response.url,
-                timeout=5000
-            ) as response_info:
-                await new_page.goto(post_url)
+    ######################     INDIVIDUAL POST SCRAPING     ##########################
 
-            response = await response_info.value
-            data = await response.json()
+    # Iterate over the post links and fetch data (ACTUAL SCRAPING)
 
+    # This is where the parallel scraping happens.         (FAN OUT)
+    # We use asyncio.gather to run multiple coroutines concurrently.
 
+    #task list for future use
+    tasks   = [asyncio.create_task(_fetch_one(context, h, i, len(post_hrefs)))
+           for i, h in enumerate(post_hrefs, start=1)]
+    
+    #triggered if cutoff date is reached
+    early_stop = False
 
+    # Iterate over the tasks as they complete (FAN IN) ######################3
+    for fut in asyncio.as_completed(tasks):
+        idx, href, data, pdate = await fut
 
+        if data and pdate and pdate < CUTOFF_DATE:
+            print(f"🛑  {href} dated {pdate.date()} (<2023). Cancelling remaining.")
+            early_stop = True
+            break
 
-            ###### FROM HERE ASSUMMING THE DATA IS IN VALID FORMAT ######
-
-
-
-
-            # Check the post timestamp
-            timestamp = data.get("items", [{}])[0].get("taken_at")
-            if timestamp:
-                post_date = datetime.fromtimestamp(timestamp)
-                if post_date < CUTOFF_DATE:
-                    print(f"🛑 Post {href} is from {post_date.date()}, before 2023. Stopping.")
-                    await new_page.close()
-                    break
-
+        if data:
             results[href] = data
-            print(f"✅ ({i}/{len(post_hrefs)}) {href} — {post_date.date()}")
+            print(f"✅  ({idx}/{len(post_hrefs)}) {href} — "
+                f"{pdate.date() if pdate else 'no-date'}")
+
+    if early_stop:
+        for t in tasks:
+            t.cancel()
+        
+
+    return results
+
+
+async def _fetch_one(context, href, idx, total):
+    """
+    Open ONE tab (after acquiring semaphore), pull the JSON, close tab.
+
+    args:
+        context: Playwright context
+        href: URL of the post
+        idx: Index of the post in the list
+        total: Total number of posts to scrape
+    returns:
+        idx: Index of the post in the list
+        href: URL of the post
+        data: JSON data of the post or None if not found
+        post_date: Date of the post or None if not found
+    """
+
+    # Random jitter to avoid being blocked
+    jitter = random.uniform(JITTER_RANGE[0], JITTER_RANGE[1])
+    await asyncio.sleep(jitter)
+
+    print(f"{idx=}  looking for semaphore")  
+
+    async with GLOBAL_SEM:                             # ① blocks if >MAX tabs open
+
+        print(f"{idx=}  got permit")  
+
+        page = await context.new_page()         # ② tab is created **inside**
+        try:
+            async with page.expect_response(
+                lambda r: "/api/v1/media/" in r.url and "/info/" in r.url,
+                timeout=5_000
+                # timeout = 60_000
+            ) as resp_info:
+                await page.goto(f"https://www.instagram.com{href}?img_index=1")
+
+            print(f"Response received for {idx} ({href})")
+            resp  = await resp_info.value
+            data  = await resp.json()
+
+            ts        = data.get("items", [{}])[0].get("taken_at")
+            post_date = datetime.fromtimestamp(ts) if ts else None
+            return idx, href, data, post_date
 
         except TimeoutError:
             print(f"⏱️ Timeout: {href}")
-        finally:
-            await new_page.close()
+            return idx, href, None, None
+        
+        except Exception as e:
+            print(f"❌ Error fetching {href}: {e}")
+            # wait for a bit before retrying (with jitter)
+            await asyncio.sleep(jitter+3)
+            return idx, href, None, None
 
-    return results
+        finally:
+            await page.close()                  # ③ tab closed, permit released
+            print(f"{idx=}  released permit")
 
 # Batch scrape users from a CSV and save to JSON
 async def scrape_users_from_csv(csv_path: str, max_posts_per_user: int, output_json: str):
@@ -166,6 +242,7 @@ async def scrape_users_from_csv(csv_path: str, max_posts_per_user: int, output_j
     else:
         all_results = {}
 
+    #############  Launch browser #############
     print("Launching browser...")
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=False)
@@ -173,20 +250,33 @@ async def scrape_users_from_csv(csv_path: str, max_posts_per_user: int, output_j
         context = await browser.new_context(**device)
         page = await context.new_page()
 
-        if os.path.exists(".cookies.json"):
-        # if os.path.exists("/home/asdf/ig-project/ig_scraperv3/.cookies.json"):
+        # if os.path.exists(".cookies.json"):
+        if os.path.exists("/home/asdf/ig-project/ig_scraperv3/.cookies.json"):
             print("🔄 Loading cookies...")
-            with open(".cookies.json", "r") as f:
-            # with open("/home/asdf/ig-project/ig_scraperv3/.cookies.json", "r") as f:
+            # with open(".cookies.json", "r") as f:
+            with open("/home/asdf/ig-project/ig_scraperv3/.cookies.json", "r") as f:
                 cookies = json.load(f)
             await context.add_cookies(cookies)
         else:
             print("🔐 Logging in...")
             await signon(page, username, password)
-            cookies = await context.cookies()
-            with open(".cookies.json", "w") as f:
-            # with open("/home/asdf/ig-project/ig_scraperv3/.cookies.json", "w") as f:
-                json.dump(cookies, f)
+            
+        cookies = await context.cookies()
+        # with open(".cookies.json", "w") as f:
+        with open("/home/asdf/ig-project/ig_scraperv3/.cookies.json", "w") as f:
+            json.dump(cookies, f)
+
+
+        try:
+            # Save cookies to a file in case we're asked again despite being logged in already
+            await page.wait_for_selector("span:has-text('Save info')", timeout=5000)
+            # Click the button
+            await page.click("span:has-text('Save info')", timeout=1000)
+            #wait for networkidle
+            await page.wait_for_load_state("networkidle")
+        except TimeoutError:
+            print("🔄 Cookies already saved or not needed.")
+
 
 
         print("Beginning scraping...")
@@ -195,6 +285,7 @@ async def scrape_users_from_csv(csv_path: str, max_posts_per_user: int, output_j
                 print(f"⏩ Skipping {user} (already scraped) {idx}/ {USERNAMES_TOTAL}")
                 continue
             try:
+                print(f"🔍 Scraping {user} ({idx}/ {USERNAMES_TOTAL})...")
                 result = await scrape_instagram_posts(user, max_posts_per_user, context, page)
                 all_results[user] = result
                 with open(output_json, 'w') as f:
@@ -209,5 +300,6 @@ async def scrape_users_from_csv(csv_path: str, max_posts_per_user: int, output_j
 import asyncio
 
 if __name__ == "__main__":
-    asyncio.run(scrape_users_from_csv("csv/influencers_only_reversed.csv", max_posts_per_user=150, output_json="json/all_instagram_data.json"))
-    # asyncio.run(scrape_users_from_csv("/home/asdf/ig-project/ig_scraperv3/csv/influencers_only_reversed.csv", max_posts_per_user=150, output_json="/home/asdf/ig-project/ig_scraperv3/json/all_instagram_data.json"))
+    print("Starting scraping...")
+    # asyncio.run(scrape_users_from_csv("csv/influencers_only_reversed.csv", max_posts_per_user=150, output_json="json/all_instagram_data.json"))
+    asyncio.run(scrape_users_from_csv("/home/asdf/ig-project/ig_scraperv3/csv/influencers_only_reversed.csv", max_posts_per_user=150, output_json="/home/asdf/ig-project/ig_scraperv3/json/all_instagram_data.json"))
