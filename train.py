@@ -7,13 +7,14 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 import os
 import time
+from graph import visualize_embeddings
 
 # Import your model and dataset
 from models.decoder.contrastive import ContrastiveImageSongModel, NTXentLoss
 from data.dloader import ImgSongDataset
 
 def train_contrastive_model(model, train_loader, val_loader, optimizer, loss_fn, 
-                           num_epochs=50, patience=10, device='cuda', checkpoint_dir='checkpoints'):
+                           num_epochs=50, patience=10, device='cuda', checkpoint_dir='checkpoints', visualize_every=10):
     """
     Train the contrastive model
     
@@ -128,6 +129,53 @@ def train_contrastive_model(model, train_loader, val_loader, optimizer, loss_fn,
             }, checkpoint_path)
             print(f"Checkpoint saved to {checkpoint_path}")
         
+        # Create Visulizations Periodically
+        if (epoch + 1) % visualize_every == 0 or epoch == 0 or epoch == num_epochs - 1:
+            print("Creating embedding visualizations...")
+            # Collect a subset of embeddings for visualization
+            model.eval()
+            max_samples = 200  # Limit samples to avoid cluttered plots
+            
+            image_embeds_list = []
+            song_embeds_list = []
+            
+            with torch.no_grad():
+                # Get a subset of validation data
+                sample_count = 0
+                for images, song_embeddings in val_loader:
+                    if sample_count >= max_samples:
+                        break
+                        
+                    batch_size = images.shape[0]
+                    if sample_count + batch_size > max_samples:
+                        # Take only what we need to reach max_samples
+                        images = images[:max_samples - sample_count]
+                        song_embeddings = song_embeddings[:max_samples - sample_count]
+                    
+                    images = images.to(device)
+                    song_embeddings = song_embeddings.to(device)
+                    
+                    # Get embeddings
+                    image_embeddings, projected_song_embeddings = model(images, song_embeddings)
+                    
+                    # Store embeddings
+                    image_embeds_list.append(image_embeddings.cpu())
+                    song_embeds_list.append(projected_song_embeddings.cpu())
+                    
+                    sample_count += images.shape[0]
+            
+            if image_embeds_list:
+                # Concatenate all collected embeddings
+                all_image_embeddings = torch.cat(image_embeds_list, dim=0)
+                all_song_embeddings = torch.cat(song_embeds_list, dim=0)
+                
+                # Create visualizations with both methods
+                visualize_embeddings(
+                    all_image_embeddings, all_song_embeddings,
+                    method='both', epoch=epoch+1,
+                    save_dir=os.path.join(checkpoint_dir, 'visualizations')
+                )
+
         # Early stopping check
         if avg_val_loss < best_val_loss:
             best_val_loss = avg_val_loss
@@ -265,7 +313,8 @@ if __name__ == "__main__":
     # Train the model
     trained_model, history = train_contrastive_model(
         model, train_loader, val_loader, optimizer, loss_fn, 
-        num_epochs=num_epochs, patience=patience, device=device
+        num_epochs=num_epochs, patience=patience, device=device,
+        visualize_every=10  # Add this parameter
     )
     
     # Plot training history
