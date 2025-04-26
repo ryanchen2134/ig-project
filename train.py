@@ -304,7 +304,7 @@ if __name__ == "__main__":
     loss_fn = NTXentLoss(temperature=temperature, batch_size=train_batch_size)
     optimizer = optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
     
-    # Add learning rate scheduler
+    # Learning rate scheduler
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(
         optimizer, mode='min', factor=0.5, patience=5, verbose=True
     )
