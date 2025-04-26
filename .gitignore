@@ -1,4 +1,5 @@
 .env
+.pth
 venv
 temp.json
 .cache
