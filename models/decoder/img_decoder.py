@@ -22,6 +22,7 @@ class ImageEncoder(nn.Module):
             nn.Linear(self.feature_dim, 512),
             nn.BatchNorm1d(512),
             nn.GELU(),
+            nn.Dropout(p=0.4),
             nn.Linear(512, embedding_dim)
         )  
 

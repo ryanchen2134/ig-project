@@ -14,7 +14,11 @@ class ContrastiveImageSongModel(nn.Module):
         #self.song_encoder = SongEncoder(song_feature_dim, embedding_dim)
 
         self.song_projection = nn.Sequential(
-            nn.Linear(song_embedding_dim, embedding_dim),
+            nn.Linear(song_embedding_dim, 512),  # Add intermediate layer
+            nn.BatchNorm1d(512),
+            nn.GELU(),  
+            nn.Dropout(p=0.4),  
+            nn.Linear(512, embedding_dim),
             nn.BatchNorm1d(embedding_dim)
         )
 

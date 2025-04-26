@@ -4,7 +4,7 @@ import os
 import torch
 import torchvision.transforms as transforms
 from PIL import Image
-import ast  # For safely evaluating string representations of lists
+import ast  
 
 # Based on PyTorch documentation
 transform = transforms.Compose([
@@ -21,8 +21,8 @@ class ImgSongDataset(Dataset):
         self.img_folder = img_folder
         self.transform = transform
         
-        # Parse the embedding strings to actual lists
-        self.data['embedding'] = self.data['embedding'].apply(ast.literal_eval)
+        # Parse the audio_embedding strings to actual lists
+        self.data['audio_embedding'] = self.data['audio_embedding'].apply(ast.literal_eval)
 
     def __len__(self):
         return len(self.data)
@@ -42,6 +42,6 @@ class ImgSongDataset(Dataset):
             image = torch.zeros((3, 224, 224))
         
         # Get embedding and convert to tensor
-        song_embeddings = torch.tensor(self.data.iloc[index]['embedding'], dtype=torch.float32)
+        song_embeddings = torch.tensor(self.data.iloc[index]['audio_embedding'], dtype=torch.float32)
         
         return image, song_embeddings

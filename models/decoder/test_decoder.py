@@ -3,7 +3,7 @@ import torch.nn as nn
 import torchvision.models as models
 import torchvision.transforms as transforms
 import torch.optim as optim
-from dloader import ImgSongDataset
+from data.dloader import ImgSongDataset
 from torch.utils.data import DataLoader
 from PIL import Image
 

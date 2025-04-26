@@ -1,0 +1,36 @@
+2025-04-26 00:48:21,886 - contrastive_training - INFO - Random seeds set for reproducibility
+2025-04-26 00:48:21,886 - contrastive_training - INFO - Training parameters:
+2025-04-26 00:48:21,886 - contrastive_training - INFO - Batch size: 16
+2025-04-26 00:48:21,886 - contrastive_training - INFO - Embedding dimension: 64
+2025-04-26 00:48:21,886 - contrastive_training - INFO - Learning rate: 5e-05
+2025-04-26 00:48:21,886 - contrastive_training - INFO - Weight decay: 0.0001
+2025-04-26 00:48:21,886 - contrastive_training - INFO - Max epochs: 100
+2025-04-26 00:48:21,887 - contrastive_training - INFO - Early stopping patience: 15
+2025-04-26 00:48:21,887 - contrastive_training - INFO - NT-Xent temperature: 0.1
+2025-04-26 00:48:21,915 - contrastive_training - INFO - Using device: cuda
+2025-04-26 00:48:21,915 - contrastive_training - INFO - Data path: essentia_audio_encoder/final-sample-dataset/data.csv
+2025-04-26 00:48:21,915 - contrastive_training - INFO - Image folder: essentia_audio_encoder/final-sample-dataset/images
+2025-04-26 00:48:21,995 - contrastive_training - INFO - Dataset successfully loaded with 459 samples
+2025-04-26 00:48:22,021 - contrastive_training - INFO - Song embedding dimension: 72
+2025-04-26 00:48:30,071 - contrastive_training - INFO - Train set: 367 samples
+2025-04-26 00:48:30,071 - contrastive_training - INFO - Validation set: 46 samples
+2025-04-26 00:48:30,071 - contrastive_training - INFO - Test set: 46 samples
+2025-04-26 00:48:30,071 - contrastive_training - INFO - Actual batch sizes - Train: 16, Val: 16, Test: 16
+2025-04-26 00:48:30,072 - contrastive_training - INFO - DataLoaders created successfully
+2025-04-26 00:48:30,433 - contrastive_training - INFO - Model initialized successfully
+2025-04-26 00:48:30,435 - contrastive_training - INFO - Optimizer and scheduler initialized
+2025-04-26 00:48:30,435 - contrastive_training - INFO - Starting training...
+2025-04-26 00:48:30,660 - contrastive_training - INFO - Starting training on device: cuda
+2025-04-26 00:48:30,660 - contrastive_training - INFO - Number of training batches: 23
+2025-04-26 00:48:30,660 - contrastive_training - INFO - Number of validation batches: 3
+2025-04-26 00:49:23,529 - contrastive_training - INFO - Epoch [1/100], Train Loss: 3.4818, Val Loss: 3.4517, Time: 52.87s
+2025-04-26 00:49:23,530 - contrastive_training - INFO - Creating embedding visualizations...
+2025-04-26 00:49:45,551 - contrastive_training - INFO - Validation loss improved to 3.4517
+2025-04-26 00:50:55,857 - contrastive_training - INFO - Epoch [2/100], Train Loss: 2.9822, Val Loss: 3.4317, Time: 70.31s
+2025-04-26 00:50:55,859 - contrastive_training - INFO - Validation loss improved to 3.4317
+2025-04-26 00:51:54,162 - contrastive_training - INFO - Epoch [3/100], Train Loss: 2.7948, Val Loss: 3.5605, Time: 58.30s
+2025-04-26 00:51:54,162 - contrastive_training - INFO - No improvement for 1 epochs
+2025-04-26 00:52:55,688 - contrastive_training - INFO - Epoch [4/100], Train Loss: 2.6471, Val Loss: 3.4700, Time: 61.53s
+2025-04-26 00:52:55,688 - contrastive_training - INFO - No improvement for 2 epochs
+2025-04-26 00:53:52,714 - contrastive_training - INFO - Epoch [5/100], Train Loss: 2.4648, Val Loss: 3.4921, Time: 57.03s
+2025-04-26 00:53:52,715 - contrastive_training - INFO - No improvement for 3 epochs
