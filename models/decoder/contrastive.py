@@ -45,6 +45,9 @@ class NTXentLoss(nn.Module):
         self.criterion = nn.CrossEntropyLoss()
         
     def forward(self, image_embeddings, song_embeddings):
+        # Get actual batch size from inputs
+        batch_size = image_embeddings.size(0)
+        
         # Compute similarity matrix
         similarity_matrix = torch.matmul(image_embeddings, song_embeddings.T) / self.temperature
         

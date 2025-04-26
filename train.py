@@ -9,6 +9,7 @@ import os
 import time
 import logging
 from graph import visualize_embeddings
+from torch.optim.lr_scheduler import LambdaLR, ReduceLROnPlateau
 
 # Import your model and dataset
 from models.decoder.contrastive import ContrastiveImageSongModel, NTXentLoss
@@ -43,6 +44,12 @@ def setup_logger(log_dir='logs'):
     logger.addHandler(console_handler)
     
     return logger
+
+#Warmup Learning Scheduler
+def warmup_lambda(epoch):
+    if epoch < 5:
+        return epoch / 5
+    return 1.0
 
 def train_contrastive_model(model, train_loader, val_loader, optimizer, loss_fn, 
                            num_epochs=50, patience=10, device='cuda', checkpoint_dir='checkpoints', 
@@ -92,7 +99,7 @@ def train_contrastive_model(model, train_loader, val_loader, optimizer, loss_fn,
     
     for epoch in range(num_epochs):
         epoch_start_time = time.time()
-        
+
         # Training phase
         model.train()
         train_loss = 0.0
@@ -153,7 +160,12 @@ def train_contrastive_model(model, train_loader, val_loader, optimizer, loss_fn,
         
         avg_val_loss = val_loss / len(val_loader)
         val_losses.append(avg_val_loss)
-        
+                
+        if epoch < 5:
+            warmup_scheduler.step()
+        else:
+            scheduler.step(avg_val_loss)
+
         # Calculate epoch time
         epoch_time = time.time() - epoch_start_time
         
@@ -311,12 +323,12 @@ if __name__ == "__main__":
     logger.info("Random seeds set for reproducibility")
 
     # Parameters
-    batch_size = 16
+    batch_size = 8
     embedding_dim = 64
-    learning_rate = 5e-5
-    weight_decay = 1e-4
-    num_epochs = 100
-    patience = 15
+    learning_rate = 1e-4
+    weight_decay = 2e-4
+    num_epochs = 200
+    patience = 20
     temperature = 0.1  # Temperature parameter for NT-Xent loss
     
     # Log parameters
@@ -394,13 +406,13 @@ if __name__ == "__main__":
         raise
     
     # Loss function and optimizer
-    loss_fn = NTXentLoss(temperature=temperature, batch_size=train_batch_size)
+    loss_fn = NTXentLoss(temperature=temperature)
     optimizer = optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
     
-    # Learning rate scheduler
-    scheduler = optim.lr_scheduler.ReduceLROnPlateau(
-        optimizer, mode='min', factor=0.5, patience=5, verbose=True
-    )
+    # Learning rate schedulers
+    warmup_scheduler = LambdaLR(optimizer, lr_lambda=warmup_lambda)
+    scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=5, verbose=True)
+    
     logger.info("Optimizer and scheduler initialized")
     
     logger.info("Starting training...")
