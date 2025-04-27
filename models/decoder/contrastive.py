@@ -23,12 +23,12 @@ class ContrastiveImageSongModel(nn.Module):
         
         # Song projection with more regularization for smaller datasets
         self.song_projection = nn.Sequential(
-            nn.Linear(song_embedding_dim, 256),  # Reduced intermediate dimension
-            nn.BatchNorm1d(256),
-            nn.GELU(),  
-            nn.Dropout(p=0.5),  # Increased dropout to prevent overfitting
+            nn.Linear(song_embedding_dim, 256),
+            nn.GroupNorm(num_groups=8, num_channels=256),  
+            nn.GELU(),
+            nn.Dropout(p=0.5),
             nn.Linear(256, embedding_dim),
-            nn.BatchNorm1d(embedding_dim)
+            nn.GroupNorm(num_groups=2, num_channels=embedding_dim)  
         )
 
         # Weight initialization for better training on small datasets

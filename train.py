@@ -7,9 +7,10 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 import os
 import time
+import math
 import logging
 from graph import visualize_embeddings
-from torch.optim.lr_scheduler import CosineAnnealingWarmRestarts
+from torch.optim.lr_scheduler import CosineAnnealingWarmRestarts, _LRScheduler
 import argparse
 
 # Import your modified model and dataset
@@ -86,6 +87,7 @@ def train_contrastive_model(model, train_loader, val_loader, optimizer, loss_fn,
     
     train_losses = []
     val_losses = []
+    learning_rates = []
     
     # Track training time
     start_time = time.time()
@@ -164,7 +166,12 @@ def train_contrastive_model(model, train_loader, val_loader, optimizer, loss_fn,
                 
         # Step the scheduler if provided
         if scheduler is not None:
-            if isinstance(scheduler, CosineAnnealingWarmRestarts):
+            if isinstance(scheduler, WarmupCosineScheduler):
+                current_lr = scheduler.get_lr()[0]
+                learning_rates.append(current_lr)
+                scheduler.step()
+                logger.info(f"Current Learning rate: {current_lr:.6f}")
+            elif isinstance(scheduler, CosineAnnealingWarmRestarts):
                 scheduler.step(epoch + batch_idx / len(train_loader))
             else:
                 scheduler.step(avg_val_loss)
@@ -258,10 +265,47 @@ def train_contrastive_model(model, train_loader, val_loader, optimizer, loss_fn,
         'val_loss': val_losses,
         'best_val_loss': best_val_loss,
         'best_epoch': best_epoch,
-        'total_time': total_time
+        'total_time': total_time,
+        'learning_rates' : learning_rates
     }
     
     return model, history
+
+class WarmupCosineScheduler(_LRScheduler):
+    """
+    Implements a learning rate scheduler with warmup followed by cosine annealing.
+    
+    Args:
+        optimizer: The optimizer to adjust learning rate for
+        warmup_epochs: Number of epochs for linear warmup
+        max_epochs: Total number of epochs
+        warmup_start_lr: Initial learning rate for warmup phase
+        base_lr: Learning rate after warmup (peak learning rate)
+        min_lr: Minimum learning rate after cosine decay
+        last_epoch: The index of last epoch
+    """
+    def __init__(self, optimizer, warmup_epochs, max_epochs, warmup_start_lr=1e-6, 
+                 base_lr=5e-4, min_lr=1e-5, last_epoch=-1):
+        self.warmup_epochs = warmup_epochs
+        self.max_epochs = max_epochs
+        self.warmup_start_lr = warmup_start_lr
+        self.base_lr = base_lr
+        self.min_lr = min_lr
+        super(WarmupCosineScheduler, self).__init__(optimizer, last_epoch)
+        
+    def get_lr(self):
+        if self.last_epoch < self.warmup_epochs:
+            # Linear warmup
+            alpha = self.last_epoch / self.warmup_epochs
+            lr_scale = self.warmup_start_lr + alpha * (self.base_lr - self.warmup_start_lr)
+        else:
+            # Cosine decay after warmup
+            progress = (self.last_epoch - self.warmup_epochs) / (self.max_epochs - self.warmup_epochs)
+            progress = min(1.0, progress)  # Ensure we don't go beyond 1.0
+            cosine_decay = 0.5 * (1 + math.cos(math.pi * progress))
+            lr_scale = self.min_lr + cosine_decay * (self.base_lr - self.min_lr)
+            
+        return [lr_scale for _ in self.base_lrs]
 
 # Mixup augmentation for contrastive learning - helps small datasets
 def mixup_batch(images, song_embeddings, alpha=0.2):
@@ -344,7 +388,7 @@ if __name__ == "__main__":
                         help='Batch size for training')
     parser.add_argument('--embedding_dim', type=int, default=64, 
                         help='Dimension of embedding space')
-    parser.add_argument('--lr', type=float, default=5e-4, 
+    parser.add_argument('--lr', type=float, default=1e-4, 
                         help='Learning rate')
     parser.add_argument('--weight_decay', type=float, default=1e-4, 
                         help='Weight decay for optimizer')
@@ -362,6 +406,10 @@ if __name__ == "__main__":
                         help='Path to the CSV data file')
     parser.add_argument('--img_folder', type=str, default="essentia_audio_encoder/final-sample-dataset/images",
                         help='Path to the folder containing images')
+    parser.add_argument('--warmup_epochs', type=int, default=5,
+                        help='Number of epochs for learning rate warmup')
+    parser.add_argument('--min_lr', type=float, default=1e-5,
+                        help='Minimum learning rate after cosine decay')
     
     args = parser.parse_args()
     
@@ -384,6 +432,8 @@ if __name__ == "__main__":
     backbone_type = args.backbone
     hard_negative_weight = args.hard_negative_weight
     mixup_alpha = args.mixup_alpha
+    warmup_epochs = args.warmup_epochs
+    min_lr = args.min_lr
     
     # Log parameters
     logger.info("Training parameters:")
@@ -466,4 +516,95 @@ if __name__ == "__main__":
         logger.error(f"Failed to initialize model: {str(e)}")
         raise
     
-    #
+    # Loss function and optimizer
+    loss_fn = NTXentLoss(temperature=temperature, hard_negative_weight=hard_negative_weight)
+    optimizer = optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
+
+    # Learning rate scheduler - cosine annealing with warm restarts works well for small datasets
+    scheduler = WarmupCosineScheduler(
+        optimizer, 
+        warmup_epochs=warmup_epochs,
+        max_epochs=num_epochs,
+        warmup_start_lr=learning_rate/100,
+        base_lr=learning_rate,
+        min_lr=min_lr
+    )
+
+    logger.info("Optimizer and scheduler initialized")
+    logger.info("Starting training...")
+
+    try:
+        # Train the model
+        trained_model, history = train_contrastive_model(
+            model, train_loader, val_loader, optimizer, loss_fn, 
+            num_epochs=num_epochs, patience=patience, device=device,
+            visualize_every=5, logger=logger, scheduler=scheduler,
+            mixup_alpha=mixup_alpha
+        )
+        
+        # Plot training history
+        plot_training_history(history, save_path='contrastive_training_history.png', logger=logger)
+        
+        # Save the model with backbone information
+        checkpoint = {
+            'model_state_dict': trained_model.state_dict(),
+            'embedding_dim': trained_model.embedding_dim,
+            'backbone_type': backbone_type,
+            'song_embedding_dim': song_embedding_dim
+        }
+        torch.save(checkpoint, f'contrastive_model_{backbone_type}.pth')
+        logger.info(f"Training completed and model saved as contrastive_model_{backbone_type}.pth!")
+        
+    except Exception as e:
+        logger.error(f"Error during training: {str(e)}")
+        logger.exception("Stack trace:")
+        raise
+
+    # Optional: Evaluate on test set
+    logger.info("\nEvaluating on test set...")
+
+    try:
+        trained_model.eval()
+        test_loss = 0.0
+        
+        with torch.no_grad():
+            for images, song_embeddings in test_loader:
+                images = images.to(device)
+                song_embeddings = song_embeddings.to(device)
+                
+                image_embeddings, projected_song_embeddings = trained_model(images, song_embeddings)
+                loss = loss_fn(image_embeddings, projected_song_embeddings)
+                test_loss += loss.item()
+        
+        avg_test_loss = test_loss / len(test_loader)
+        logger.info(f"Test Loss: {avg_test_loss:.4f}")
+        
+        # Additional evaluation: check embedding similarity for matching pairs
+        total_correct = 0
+        total_samples = 0
+        
+        with torch.no_grad():
+            for images, song_embeddings in test_loader:
+                batch_size = images.size(0)
+                images = images.to(device)
+                song_embeddings = song_embeddings.to(device)
+                
+                # Get embeddings
+                image_embeddings, projected_song_embeddings = trained_model(images, song_embeddings)
+                
+                # Compute similarity matrix for the batch
+                similarity = torch.matmul(image_embeddings, projected_song_embeddings.T)
+                
+                # Check if the highest similarity for each image is with its corresponding song
+                _, indices = similarity.max(dim=1)
+                correct = (indices == torch.arange(batch_size).to(device)).sum().item()
+                
+                total_correct += correct
+                total_samples += batch_size
+        
+        accuracy = total_correct / total_samples * 100
+        logger.info(f"Matching accuracy on test set: {accuracy:.2f}%")
+        
+    except Exception as e:
+        logger.error(f"Error during testing: {str(e)}")
+        logger.exception("Stack trace:")

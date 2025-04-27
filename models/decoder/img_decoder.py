@@ -47,10 +47,10 @@ class ImageEncoder(nn.Module):
         self.projection = nn.Sequential(
             nn.AdaptiveAvgPool2d(1),
             nn.Flatten(),
-            nn.Linear(self.feature_dim, 256),  # Reduced intermediate dimension for smaller dataset
-            nn.BatchNorm1d(256),
+            nn.Linear(self.feature_dim, 256),
+            nn.GroupNorm(num_groups=8, num_channels=256),  # GroupNorm instead of BatchNorm
             nn.GELU(),
-            nn.Dropout(p=0.5),  # Increased dropout to prevent overfitting
+            nn.Dropout(p=0.5),
             nn.Linear(256, embedding_dim)
         )
 
