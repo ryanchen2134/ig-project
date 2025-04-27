@@ -384,11 +384,11 @@ if __name__ == "__main__":
     parser.add_argument('--backbone', type=str, default='resnet18', 
                         choices=['resnet18', 'efficientnet_b0', 'convnext_tiny'],
                         help='Backbone architecture for image encoder')
-    parser.add_argument('--batch_size', type=int, default=8, 
+    parser.add_argument('--batch_size', type=int, default=16, 
                         help='Batch size for training')
-    parser.add_argument('--embedding_dim', type=int, default=64, 
+    parser.add_argument('--embedding_dim', type=int, default=72, 
                         help='Dimension of embedding space')
-    parser.add_argument('--lr', type=float, default=1e-4, 
+    parser.add_argument('--lr', type=float, default=1e-3, 
                         help='Learning rate')
     parser.add_argument('--weight_decay', type=float, default=1e-4, 
                         help='Weight decay for optimizer')
@@ -396,9 +396,9 @@ if __name__ == "__main__":
                         help='Maximum number of epochs')
     parser.add_argument('--patience', type=int, default=15, 
                         help='Early stopping patience')
-    parser.add_argument('--temperature', type=float, default=0.1, 
+    parser.add_argument('--temperature', type=float, default=0.06, 
                         help='Temperature parameter for NT-Xent loss')
-    parser.add_argument('--hard_negative_weight', type=float, default=0.5, 
+    parser.add_argument('--hard_negative_weight', type=float, default=0.3, 
                         help='Weight for hard negative mining (0 to disable)')
     parser.add_argument('--mixup_alpha', type=float, default=0.2, 
                         help='Alpha parameter for mixup augmentation (0 to disable)')
@@ -518,8 +518,8 @@ if __name__ == "__main__":
     
     # Loss function and optimizer
     loss_fn = NTXentLoss(temperature=temperature, hard_negative_weight=hard_negative_weight)
-    optimizer = optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
-
+    #optimizer = optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
+    optimizer = optim.AdamW(model.parameters(), lr = .0005, weight_decay=.01)
     # Learning rate scheduler - cosine annealing with warm restarts works well for small datasets
     scheduler = WarmupCosineScheduler(
         optimizer, 
