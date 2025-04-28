@@ -49,8 +49,8 @@ def prepare_song_database(csv_path, output_path):
             song_data['id'].append(song_id)
             
             # Use the new music_title and music_artist columns
-            song_data['title'].append(row['music_title'])
-            song_data['artist'].append(row['music_artist'])
+            song_data['title'].append(row['song'])
+            song_data['artist'].append(row['artist'])
             song_data['shortcode'].append(row['shortcode'])
             song_data['link'].append(row['link'])
             

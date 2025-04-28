@@ -1,0 +1,16 @@
+2025-04-28 00:15:30,619 - contrastive_training - INFO - Random seeds set for reproducibility
+2025-04-28 00:15:30,619 - contrastive_training - INFO - Training parameters:
+2025-04-28 00:15:30,619 - contrastive_training - INFO - Backbone architecture: resnet18
+2025-04-28 00:15:30,619 - contrastive_training - INFO - Batch size: 64
+2025-04-28 00:15:30,620 - contrastive_training - INFO - Embedding dimension: 128
+2025-04-28 00:15:30,620 - contrastive_training - INFO - Learning rate: 0.001
+2025-04-28 00:15:30,620 - contrastive_training - INFO - Weight decay: 0.0001
+2025-04-28 00:15:30,621 - contrastive_training - INFO - Max epochs: 200
+2025-04-28 00:15:30,621 - contrastive_training - INFO - Early stopping patience: 15
+2025-04-28 00:15:30,621 - contrastive_training - INFO - NT-Xent temperature: 0.5
+2025-04-28 00:15:30,621 - contrastive_training - INFO - Hard negative weight: 0.2
+2025-04-28 00:15:30,621 - contrastive_training - INFO - Mixup alpha: 0.0
+2025-04-28 00:15:30,643 - contrastive_training - INFO - Using device: cuda
+2025-04-28 00:15:30,643 - contrastive_training - INFO - Data path: data/csv files/rawr_dinosaur.csv
+2025-04-28 00:15:30,643 - contrastive_training - INFO - Image folder: data/final-sample-dataset/images
+2025-04-28 00:15:30,679 - contrastive_training - ERROR - Failed to load dataset: 'audio_embedding'

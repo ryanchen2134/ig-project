@@ -47,229 +47,280 @@ def setup_logger(log_dir='logs'):
     
     return logger
 
-def train_contrastive_model(model, train_loader, val_loader, optimizer, loss_fn, 
-                           num_epochs=100, patience=15, device='cuda', checkpoint_dir='checkpoints', 
-                           visualize_every=5, logger=None, scheduler=None, mixup_alpha=0.2):
+def calculate_recall_metrics(image_embeddings, song_embeddings, ks=[1, 5, 10]):
     """
-    Train the contrastive model with optimizations for small datasets
+    Calculate recall metrics between image and song embeddings
     
     Args:
-        model: The contrastive model
-        train_loader: DataLoader for training data
-        val_loader: DataLoader for validation data
-        optimizer: Optimization algorithm
-        loss_fn: Contrastive loss function
-        num_epochs: Maximum number of epochs
-        patience: Early stopping patience
-        device: Device to train on
-        checkpoint_dir: Directory to save checkpoints
-        visualize_every: How often to visualize embeddings
-        logger: Logger instance
-        scheduler: Learning rate scheduler
-        mixup_alpha: Alpha parameter for mixup augmentation (0 to disable)
-    
+        image_embeddings: Image embeddings tensor
+        song_embeddings: Song embeddings tensor
+        ks: List of k values for Recall@k
+        
     Returns:
-        model: Trained model
-        history: Training history
+        Dictionary of recall metrics
     """
-    # Create checkpoint directory if it doesn't exist
-    os.makedirs(checkpoint_dir, exist_ok=True)
+    # Calculate similarity matrix
+    similarity = torch.matmul(image_embeddings, song_embeddings.T)
     
-    # Use default logger if not provided
-    if logger is None:
-        logger = logging.getLogger('contrastive_training')
+    # Get the size
+    batch_size = image_embeddings.size(0)
     
-    model = model.to(device)
-    best_val_loss = float('inf')
-    best_model = None
-    no_improve_count = 0
-    best_epoch = 0
+    # Calculate recalls for image->song direction
+    metrics = {}
+    for k in ks:
+        # Get top-k indices
+        _, indices_i2s = similarity.topk(k=min(k, batch_size), dim=1)
+        
+        # Create target indices (diagonal)
+        targets = torch.arange(batch_size).view(-1, 1)
+        
+        # Check if target index is in top-k
+        correct_i2s = torch.any(indices_i2s == targets, dim=1).float().mean().item() * 100
+        metrics[f'r@{k}_i2s'] = correct_i2s
+        
+        # Repeat for song->image direction
+        _, indices_s2i = similarity.T.topk(k=min(k, batch_size), dim=1)
+        correct_s2i = torch.any(indices_s2i == targets, dim=1).float().mean().item() * 100
+        metrics[f'r@{k}_s2i'] = correct_s2i
+        
+        # Overall recall (average of both directions)
+        metrics[f'r@{k}'] = (correct_i2s + correct_s2i) / 2
     
-    train_losses = []
-    val_losses = []
-    learning_rates = []
-    
-    # Track training time
-    start_time = time.time()
-    
-    logger.info(f"Starting training on device: {device}")
-    logger.info(f"Number of training batches: {len(train_loader)}")
-    logger.info(f"Number of validation batches: {len(val_loader)}")
-    
-    for epoch in range(num_epochs):
-        epoch_start_time = time.time()
+    return metrics
 
-        # Training phase
-        model.train()
-        train_loss = 0.0
+def train_contrastive_model(model, train_loader, val_loader, optimizer, loss_fn, 
+                        num_epochs=100, patience=15, device='cuda', checkpoint_dir='checkpoints', 
+                        visualize_every=5, logger=None, scheduler=None, mixup_alpha=0.2,
+                        validate_every=1, eval_recalls=True, temperature_annealing=True):
+        """
+        Enhanced training function with better evaluation metrics
+        """
+        # Create checkpoint directory if it doesn't exist
+        os.makedirs(checkpoint_dir, exist_ok=True)
         
-        for batch_idx, (images, song_embeddings) in enumerate(train_loader):
-            images = images.to(device)
-            song_embeddings = song_embeddings.to(device)
-            
-            # Apply mixup augmentation if enabled - helps with small datasets
-            if mixup_alpha > 0:
-                images, song_embeddings = mixup_batch(images, song_embeddings, alpha=mixup_alpha)
-            
-            optimizer.zero_grad()
-            
-            # Forward pass
-            image_embeddings, projected_song_embeddings = model(images, song_embeddings)
-            
-            # Calculate loss
-            loss = loss_fn(image_embeddings, projected_song_embeddings)
-            
-            # Check for NaN/Inf
-            if torch.isnan(loss) or torch.isinf(loss):
-                logger.error(f"Training loss is {loss.item()}, stopping training")
-                return model, {'train_loss': train_losses, 'val_loss': val_losses}
-            
-            # Backward pass and optimize
-            loss.backward()
-            
-            # Add gradient clipping
-            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
-            
-            optimizer.step()
-            
-            train_loss += loss.item()
-            
-            if (batch_idx + 1) % 5 == 0:  # More frequent logging for small datasets
-                logger.debug(f"Epoch [{epoch+1}/{num_epochs}], Batch [{batch_idx+1}/{len(train_loader)}], Loss: {loss.item():.4f}")
+        if logger is None:
+            logger = logging.getLogger('contrastive_training')
         
-        avg_train_loss = train_loss / len(train_loader)
-        train_losses.append(avg_train_loss)
+        model = model.to(device)
+        best_val_loss = float('inf')
+        best_recall = 0.0  # Track best recall@1
+        best_model = None
+        no_improve_count = 0
+        best_epoch = 0
         
-        # Validation phase
-        model.eval()
-        val_loss = 0.0
+        train_losses = []
+        val_losses = []
+        recalls = []
+        learning_rates = []
+        temperatures = []  # If using temperature annealing
         
-        with torch.no_grad():
-            for images, song_embeddings in val_loader:
+        # Initial temperature
+        temperature = 0.1
+        temp_min = 0.01
+        
+        # Track training time
+        start_time = time.time()
+        
+        logger.info(f"Starting enhanced training on device: {device}")
+        
+        for epoch in range(num_epochs):
+            epoch_start_time = time.time()
+
+            # Training phase
+            model.train()
+            train_loss = 0.0
+            
+            # Temperature annealing (gradually decrease temperature)
+            if temperature_annealing:
+                temperature = max(temp_min, 0.1 * (1.0 - epoch / (num_epochs * 0.8)))
+                temperatures.append(temperature)
+                if hasattr(loss_fn, 'temperature'):
+                    loss_fn.temperature = temperature
+            
+            for batch_idx, (images, song_embeddings) in enumerate(train_loader):
                 images = images.to(device)
                 song_embeddings = song_embeddings.to(device)
+                
+                # Apply mixup augmentation with probability
+                if mixup_alpha > 0 and np.random.random() < 0.7:  # 70% probability
+                    images, song_embeddings = mixup_batch(images, song_embeddings, alpha=mixup_alpha)
+                
+                optimizer.zero_grad()
                 
                 # Forward pass
                 image_embeddings, projected_song_embeddings = model(images, song_embeddings)
                 
                 # Calculate loss
-                loss = loss_fn(image_embeddings, projected_song_embeddings)
+                if hasattr(model, 'similarity'):
+                    # Use model's similarity function if available
+                    sim_matrix = model.similarity(image_embeddings, projected_song_embeddings)
+                    loss = loss_fn(image_embeddings, projected_song_embeddings, use_model_temp=True, model_sim=sim_matrix)
+                else:
+                    loss = loss_fn(image_embeddings, projected_song_embeddings)
                 
                 if torch.isnan(loss) or torch.isinf(loss):
-                    logger.error(f"Validation loss is {loss.item()}, stopping training")
+                    logger.error(f"Training loss is {loss.item()}, stopping training")
                     return model, {'train_loss': train_losses, 'val_loss': val_losses}
                 
-                val_loss += loss.item()
-        
-        avg_val_loss = val_loss / len(val_loader)
-        val_losses.append(avg_val_loss)
+                # Backward pass and optimize
+                loss.backward()
+                torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+                optimizer.step()
                 
-        # Step the scheduler if provided
-        if scheduler is not None:
-            if isinstance(scheduler, WarmupCosineScheduler):
-                current_lr = scheduler.get_lr()[0]
-                learning_rates.append(current_lr)
-                scheduler.step()
-                logger.info(f"Current Learning rate: {current_lr:.6f}")
-            elif isinstance(scheduler, CosineAnnealingWarmRestarts):
-                scheduler.step(epoch + batch_idx / len(train_loader))
+                train_loss += loss.item()
+                
+            avg_train_loss = train_loss / len(train_loader)
+            train_losses.append(avg_train_loss)
+            
+            # Validation phase - only validate every N epochs to speed up training
+            if epoch % validate_every == 0:
+                model.eval()
+                val_loss = 0.0
+                
+                # For computing recall metrics
+                if eval_recalls:
+                    all_image_embeddings = []
+                    all_song_embeddings = []
+                
+                with torch.no_grad():
+                    for images, song_embeddings in val_loader:
+                        images = images.to(device)
+                        song_embeddings = song_embeddings.to(device)
+                        
+                        # Forward pass
+                        image_embeddings, projected_song_embeddings = model(images, song_embeddings)
+                        
+                        # Calculate loss
+                        if hasattr(model, 'similarity'):
+                            sim_matrix = model.similarity(image_embeddings, projected_song_embeddings)
+                            loss = loss_fn(image_embeddings, projected_song_embeddings, use_model_temp=True, model_sim=sim_matrix)
+                        else:
+                            loss = loss_fn(image_embeddings, projected_song_embeddings)
+                        
+                        val_loss += loss.item()
+                        
+                        # Collect embeddings for recall calculation
+                        if eval_recalls:
+                            all_image_embeddings.append(image_embeddings.cpu())
+                            all_song_embeddings.append(projected_song_embeddings.cpu())
+                
+                avg_val_loss = val_loss / len(val_loader)
+                val_losses.append(avg_val_loss)
+                
+                # Calculate recall metrics
+                if eval_recalls:
+                    all_image_embeddings = torch.cat(all_image_embeddings, dim=0)
+                    all_song_embeddings = torch.cat(all_song_embeddings, dim=0)
+                    
+                    # Calculate recalls
+                    recall_metrics = calculate_recall_metrics(all_image_embeddings, all_song_embeddings)
+                    recalls.append(recall_metrics)
+                    
+                    current_recall = recall_metrics['r@1_i2s']  # Use image->song Recall@1
+                    logger.info(f"Recalls: R@1: {recall_metrics['r@1_i2s']:.2f}%, "
+                            f"R@5: {recall_metrics['r@5_i2s']:.2f}%, "
+                            f"R@10: {recall_metrics['r@10_i2s']:.2f}%")
             else:
-                scheduler.step(avg_val_loss)
-
-        # Calculate epoch time
-        epoch_time = time.time() - epoch_start_time
-        
-        logger.info(f"Epoch [{epoch+1}/{num_epochs}], Train Loss: {avg_train_loss:.4f}, Val Loss: {avg_val_loss:.4f}, Time: {epoch_time:.2f}s")
-        
-        # Save checkpoint more frequently for small datasets
-        if (epoch + 1) % 5 == 0:
-            checkpoint_path = os.path.join(checkpoint_dir, f'checkpoint_epoch_{epoch+1}.pth')
-            torch.save({
-                'epoch': epoch + 1,
-                'model_state_dict': model.state_dict(),
-                'optimizer_state_dict': optimizer.state_dict(),
-                'train_loss': train_losses,
-                'val_loss': val_losses,
-            }, checkpoint_path)
-            logger.info(f"Checkpoint saved to {checkpoint_path}")
-        
-        # Create Visualizations Periodically - more frequent for small datasets
-        if (epoch + 1) % visualize_every == 0 or epoch == 0 or epoch == num_epochs - 1:
-            logger.info("Creating embedding visualizations...")
-            # Collect embeddings for visualization - for small datasets, use all validation samples
-            model.eval()
+                # Fill with previous values when not validating
+                if val_losses:
+                    val_losses.append(val_losses[-1])
+                else:
+                    val_losses.append(float('inf'))
+                current_recall = best_recall
             
-            image_embeds_list = []
-            song_embeds_list = []
-            
-            with torch.no_grad():
-                for images, song_embeddings in val_loader:
-                    images = images.to(device)
-                    song_embeddings = song_embeddings.to(device)
-                    
-                    # Get embeddings
-                    image_embeddings, projected_song_embeddings = model(images, song_embeddings)
-                    
-                    # Store embeddings
-                    image_embeds_list.append(image_embeddings.cpu())
-                    song_embeds_list.append(projected_song_embeddings.cpu())
-            
-            if image_embeds_list:
-                # Concatenate all collected embeddings
-                all_image_embeddings = torch.cat(image_embeds_list, dim=0)
-                all_song_embeddings = torch.cat(song_embeds_list, dim=0)
+            # Step the scheduler if provided
+            if scheduler is not None:
+                if isinstance(scheduler, torch.optim.lr_scheduler.ReduceLROnPlateau):
+                    scheduler.step(avg_val_loss)
+                else:
+                    scheduler.step()
                 
-                # Create visualizations with both methods
+                # Log the current learning rate
+                current_lr = optimizer.param_groups[0]['lr']
+                learning_rates.append(current_lr)
+                logger.info(f"Current Learning rate: {current_lr:.6f}")
+
+            # Calculate epoch time
+            epoch_time = time.time() - epoch_start_time
+            
+            logger.info(f"Epoch [{epoch+1}/{num_epochs}], Train Loss: {avg_train_loss:.4f}, "
+                    f"Val Loss: {avg_val_loss:.4f}, Time: {epoch_time:.2f}s")
+            
+            # Create Visualizations Periodically
+            if (epoch + 1) % visualize_every == 0 or epoch == 0 or epoch == num_epochs - 1:
+                logger.info("Creating embedding visualizations...")
                 visualize_embeddings(
                     all_image_embeddings, all_song_embeddings,
                     method='both', epoch=epoch+1,
                     save_dir=os.path.join(checkpoint_dir, 'visualizations')
                 )
 
-        # Early stopping check
-        if avg_val_loss < best_val_loss:
-            best_val_loss = avg_val_loss
-            best_model = model.state_dict().copy()
-            best_epoch = epoch + 1
-            no_improve_count = 0
-            logger.info(f"Validation loss improved to {avg_val_loss:.4f}")
+            # Early stopping check - use recall@1 instead of loss if evaluating recalls
+            improved = False
+            if eval_recalls and current_recall > best_recall:
+                best_recall = current_recall
+                best_model = model.state_dict().copy()
+                best_epoch = epoch + 1
+                no_improve_count = 0
+                improved = True
+                logger.info(f"Recall@1 improved to {best_recall:.2f}%")
+            elif not eval_recalls and avg_val_loss < best_val_loss:
+                best_val_loss = avg_val_loss
+                best_model = model.state_dict().copy()
+                best_epoch = epoch + 1
+                no_improve_count = 0
+                improved = True
+                logger.info(f"Validation loss improved to {avg_val_loss:.4f}")
+                
+            if not improved:
+                no_improve_count += 1
+                logger.info(f"No improvement for {no_improve_count} epochs")
+                
+                if no_improve_count >= patience:
+                    logger.info(f"Early stopping triggered after {epoch+1} epochs")
+                    break
+        
+        # Load best model
+        model.load_state_dict(best_model)
+        
+        # Save best model
+        best_model_path = os.path.join(checkpoint_dir, 'best_model.pth')
+        torch.save({
+            'epoch': best_epoch,
+            'model_state_dict': model.state_dict(),
+            'embedding_dim': model.embedding_dim,
+            'best_val_loss': best_val_loss if not eval_recalls else None,
+            'best_recall': best_recall if eval_recalls else None
+        }, best_model_path)
+        
+        # Print training summary
+        total_time = time.time() - start_time
+        logger.info(f"\nTraining Summary:")
+        logger.info(f"Total training time: {total_time:.2f} seconds")
+        
+        if eval_recalls:
+            logger.info(f"Best Recall@1: {best_recall:.2f}% (achieved on epoch {best_epoch})")
         else:
-            no_improve_count += 1
-            logger.info(f"No improvement for {no_improve_count} epochs")
+            logger.info(f"Best validation loss: {best_val_loss:.4f} (achieved on epoch {best_epoch})")
+        
+        history = {
+            'train_loss': train_losses,
+            'val_loss': val_losses,
+            'best_epoch': best_epoch,
+            'total_time': total_time,
+            'learning_rates': learning_rates,
+        }
+        
+        if eval_recalls:
+            history['recalls'] = recalls
+            history['best_recall'] = best_recall
+        else:
+            history['best_val_loss'] = best_val_loss
             
-            if no_improve_count >= patience:
-                logger.info(f"Early stopping triggered after {epoch+1} epochs")
-                break
-    
-    # Load best model
-    model.load_state_dict(best_model)
-    
-    # Save best model
-    best_model_path = os.path.join(checkpoint_dir, 'best_model.pth')
-    torch.save({
-        'epoch': best_epoch,
-        'model_state_dict': model.state_dict(),
-        'embedding_dim': model.embedding_dim,
-        'best_val_loss': best_val_loss
-    }, best_model_path)
-    logger.info(f"Best model saved to {best_model_path}")
-    
-    # Print training summary
-    total_time = time.time() - start_time
-    logger.info(f"\nTraining Summary:")
-    logger.info(f"Total training time: {total_time:.2f} seconds")
-    logger.info(f"Best validation loss: {best_val_loss:.4f} (achieved on epoch {best_epoch})")
-    
-    history = {
-        'train_loss': train_losses,
-        'val_loss': val_losses,
-        'best_val_loss': best_val_loss,
-        'best_epoch': best_epoch,
-        'total_time': total_time,
-        'learning_rates' : learning_rates
-    }
-    
-    return model, history
+        if temperature_annealing:
+            history['temperatures'] = temperatures
+        
+        return model, history
 
 class WarmupCosineScheduler(_LRScheduler):
     """
@@ -384,13 +435,13 @@ if __name__ == "__main__":
     parser.add_argument('--backbone', type=str, default='resnet18', 
                         choices=['resnet18', 'efficientnet_b0', 'convnext_tiny'],
                         help='Backbone architecture for image encoder')
-    parser.add_argument('--batch_size', type=int, default=16, 
+    parser.add_argument('--batch_size', type=int, default=32, 
                         help='Batch size for training')
-    parser.add_argument('--embedding_dim', type=int, default=72, 
+    parser.add_argument('--embedding_dim', type=int, default=128, 
                         help='Dimension of embedding space')
-    parser.add_argument('--lr', type=float, default=1e-3, 
+    parser.add_argument('--lr', type=float, default=1e-4, 
                         help='Learning rate')
-    parser.add_argument('--weight_decay', type=float, default=1e-4, 
+    parser.add_argument('--weight_decay', type=float, default=2e-3, 
                         help='Weight decay for optimizer')
     parser.add_argument('--epochs', type=int, default=100, 
                         help='Maximum number of epochs')
@@ -398,13 +449,13 @@ if __name__ == "__main__":
                         help='Early stopping patience')
     parser.add_argument('--temperature', type=float, default=0.06, 
                         help='Temperature parameter for NT-Xent loss')
-    parser.add_argument('--hard_negative_weight', type=float, default=0.3, 
+    parser.add_argument('--hard_negative_weight', type=float, default=0.5, 
                         help='Weight for hard negative mining (0 to disable)')
-    parser.add_argument('--mixup_alpha', type=float, default=0.2, 
+    parser.add_argument('--mixup_alpha', type=float, default=0.4, 
                         help='Alpha parameter for mixup augmentation (0 to disable)')
-    parser.add_argument('--data_path', type=str, default="essentia_audio_encoder/final-sample-dataset/data.csv",
+    parser.add_argument('--data_path', type=str, default="data/csv files/rawr_dinosaur.csv",
                         help='Path to the CSV data file')
-    parser.add_argument('--img_folder', type=str, default="essentia_audio_encoder/final-sample-dataset/images",
+    parser.add_argument('--img_folder', type=str, default="data/final-sample-dataset/images",
                         help='Path to the folder containing images')
     parser.add_argument('--warmup_epochs', type=int, default=5,
                         help='Number of epochs for learning rate warmup')
@@ -519,7 +570,7 @@ if __name__ == "__main__":
     # Loss function and optimizer
     loss_fn = NTXentLoss(temperature=temperature, hard_negative_weight=hard_negative_weight)
     #optimizer = optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
-    optimizer = optim.AdamW(model.parameters(), lr = .0005, weight_decay=.01)
+    optimizer = optim.AdamW(model.parameters(), lr = args.lr, weight_decay=args.weight_decay)
     # Learning rate scheduler - cosine annealing with warm restarts works well for small datasets
     scheduler = WarmupCosineScheduler(
         optimizer, 

@@ -5,10 +5,10 @@ import mimetypes
 from urllib.parse import urlparse
 
 #Configuration
-csv_file_path ="data/csv files/rawr_dinosaur.csv"
-image_url_column = 'link'
+csv_file_path ="data/csv_refresh/refreshed.csv"
+image_url_column = 'head_image_url'
 image_name_column = 'shortcode'
-output_folder = 'data/img_folder'
+output_folder = 'data/final-sample-dataset/images'
 
 df = pd.read_csv(csv_file_path)
 

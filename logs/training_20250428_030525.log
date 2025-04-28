@@ -1,0 +1,184 @@
+2025-04-28 03:05:25,380 - contrastive_training - INFO - Random seeds set for reproducibility
+2025-04-28 03:05:25,381 - contrastive_training - INFO - Training parameters:
+2025-04-28 03:05:25,381 - contrastive_training - INFO - Backbone architecture: convnext_tiny
+2025-04-28 03:05:25,381 - contrastive_training - INFO - Batch size: 64
+2025-04-28 03:05:25,381 - contrastive_training - INFO - Embedding dimension: 128
+2025-04-28 03:05:25,381 - contrastive_training - INFO - Learning rate: 5e-05
+2025-04-28 03:05:25,381 - contrastive_training - INFO - Weight decay: 0.001
+2025-04-28 03:05:25,381 - contrastive_training - INFO - Max epochs: 150
+2025-04-28 03:05:25,381 - contrastive_training - INFO - Early stopping patience: 20
+2025-04-28 03:05:25,381 - contrastive_training - INFO - NT-Xent temperature: 0.03
+2025-04-28 03:05:25,381 - contrastive_training - INFO - Hard negative weight: 0.4
+2025-04-28 03:05:25,382 - contrastive_training - INFO - Mixup alpha: 0.4
+2025-04-28 03:05:25,411 - contrastive_training - INFO - Using device: cuda
+2025-04-28 03:05:25,411 - contrastive_training - INFO - Data path: data/csv files/rawr_dinosaur.csv
+2025-04-28 03:05:25,411 - contrastive_training - INFO - Image folder: data/final-sample-dataset/images
+2025-04-28 03:05:25,778 - contrastive_training - INFO - Dataset successfully loaded with 1247 samples
+2025-04-28 03:05:25,799 - contrastive_training - INFO - Song embedding dimension: 128
+2025-04-28 03:05:43,824 - contrastive_training - INFO - Train set: 872 samples
+2025-04-28 03:05:43,824 - contrastive_training - INFO - Validation set: 187 samples
+2025-04-28 03:05:43,824 - contrastive_training - INFO - Test set: 188 samples
+2025-04-28 03:05:43,824 - contrastive_training - INFO - Actual batch sizes - Train: 64, Val: 64, Test: 64
+2025-04-28 03:05:43,826 - contrastive_training - INFO - DataLoaders created successfully
+2025-04-28 03:05:44,146 - contrastive_training - INFO - Model initialized successfully with convnext_tiny backbone
+2025-04-28 03:05:44,147 - contrastive_training - INFO - Optimizer and scheduler initialized
+2025-04-28 03:05:44,147 - contrastive_training - INFO - Starting training...
+2025-04-28 03:05:44,275 - contrastive_training - INFO - Starting training on device: cuda
+2025-04-28 03:05:44,276 - contrastive_training - INFO - Number of training batches: 14
+2025-04-28 03:05:44,276 - contrastive_training - INFO - Number of validation batches: 3
+2025-04-28 03:06:55,926 - contrastive_training - INFO - Current Learning rate: 0.000000
+2025-04-28 03:06:55,928 - contrastive_training - INFO - Epoch [1/150], Train Loss: 8.5519, Val Loss: 7.4024, Time: 71.65s
+2025-04-28 03:06:55,928 - contrastive_training - INFO - Creating embedding visualizations...
+2025-04-28 03:07:40,297 - contrastive_training - INFO - Validation loss improved to 7.4024
+2025-04-28 03:08:51,496 - contrastive_training - INFO - Current Learning rate: 0.000005
+2025-04-28 03:08:51,497 - contrastive_training - INFO - Epoch [2/150], Train Loss: 8.6759, Val Loss: 7.3074, Time: 71.20s
+2025-04-28 03:08:51,498 - contrastive_training - INFO - Validation loss improved to 7.3074
+2025-04-28 03:10:03,064 - contrastive_training - INFO - Current Learning rate: 0.000010
+2025-04-28 03:10:03,064 - contrastive_training - INFO - Epoch [3/150], Train Loss: 8.5364, Val Loss: 7.1071, Time: 71.57s
+2025-04-28 03:10:03,065 - contrastive_training - INFO - Validation loss improved to 7.1071
+2025-04-28 03:11:14,247 - contrastive_training - INFO - Current Learning rate: 0.000015
+2025-04-28 03:11:14,247 - contrastive_training - INFO - Epoch [4/150], Train Loss: 8.3611, Val Loss: 6.8350, Time: 71.18s
+2025-04-28 03:11:14,248 - contrastive_training - INFO - Validation loss improved to 6.8350
+2025-04-28 03:12:25,433 - contrastive_training - INFO - Current Learning rate: 0.000020
+2025-04-28 03:12:25,433 - contrastive_training - INFO - Epoch [5/150], Train Loss: 8.1231, Val Loss: 6.5172, Time: 71.18s
+2025-04-28 03:12:25,737 - contrastive_training - INFO - Checkpoint saved to checkpoints\checkpoint_epoch_5.pth
+2025-04-28 03:12:25,737 - contrastive_training - INFO - Creating embedding visualizations...
+2025-04-28 03:13:00,446 - contrastive_training - INFO - Validation loss improved to 6.5172
+2025-04-28 03:14:11,819 - contrastive_training - INFO - Current Learning rate: 0.000025
+2025-04-28 03:14:11,819 - contrastive_training - INFO - Epoch [6/150], Train Loss: 7.9819, Val Loss: 6.0219, Time: 71.37s
+2025-04-28 03:14:11,820 - contrastive_training - INFO - Validation loss improved to 6.0219
+2025-04-28 03:15:22,972 - contrastive_training - INFO - Current Learning rate: 0.000030
+2025-04-28 03:15:22,972 - contrastive_training - INFO - Epoch [7/150], Train Loss: 7.4806, Val Loss: 5.6285, Time: 71.15s
+2025-04-28 03:15:22,974 - contrastive_training - INFO - Validation loss improved to 5.6285
+2025-04-28 03:16:34,144 - contrastive_training - INFO - Current Learning rate: 0.000035
+2025-04-28 03:16:34,145 - contrastive_training - INFO - Epoch [8/150], Train Loss: 7.1316, Val Loss: 5.1945, Time: 71.17s
+2025-04-28 03:16:34,145 - contrastive_training - INFO - Validation loss improved to 5.1945
+2025-04-28 03:17:45,339 - contrastive_training - INFO - Current Learning rate: 0.000040
+2025-04-28 03:17:45,340 - contrastive_training - INFO - Epoch [9/150], Train Loss: 6.8849, Val Loss: 4.8824, Time: 71.19s
+2025-04-28 03:17:45,341 - contrastive_training - INFO - Validation loss improved to 4.8824
+2025-04-28 03:18:56,492 - contrastive_training - INFO - Current Learning rate: 0.000045
+2025-04-28 03:18:56,492 - contrastive_training - INFO - Epoch [10/150], Train Loss: 6.3168, Val Loss: 4.5537, Time: 71.15s
+2025-04-28 03:18:56,822 - contrastive_training - INFO - Checkpoint saved to checkpoints\checkpoint_epoch_10.pth
+2025-04-28 03:18:56,822 - contrastive_training - INFO - Creating embedding visualizations...
+2025-04-28 03:19:31,611 - contrastive_training - INFO - Validation loss improved to 4.5537
+2025-04-28 03:20:42,865 - contrastive_training - INFO - Current Learning rate: 0.000050
+2025-04-28 03:20:42,865 - contrastive_training - INFO - Epoch [11/150], Train Loss: 6.0414, Val Loss: 4.3637, Time: 71.25s
+2025-04-28 03:20:42,866 - contrastive_training - INFO - Validation loss improved to 4.3637
+2025-04-28 03:21:54,043 - contrastive_training - INFO - Current Learning rate: 0.000050
+2025-04-28 03:21:54,043 - contrastive_training - INFO - Epoch [12/150], Train Loss: 5.6524, Val Loss: 4.3214, Time: 71.18s
+2025-04-28 03:21:54,045 - contrastive_training - INFO - Validation loss improved to 4.3214
+2025-04-28 03:23:05,220 - contrastive_training - INFO - Current Learning rate: 0.000050
+2025-04-28 03:23:05,220 - contrastive_training - INFO - Epoch [13/150], Train Loss: 5.5914, Val Loss: 4.2831, Time: 71.18s
+2025-04-28 03:23:05,222 - contrastive_training - INFO - Validation loss improved to 4.2831
+2025-04-28 03:24:16,389 - contrastive_training - INFO - Current Learning rate: 0.000050
+2025-04-28 03:24:16,389 - contrastive_training - INFO - Epoch [14/150], Train Loss: 5.2381, Val Loss: 4.2696, Time: 71.17s
+2025-04-28 03:24:16,391 - contrastive_training - INFO - Validation loss improved to 4.2696
+2025-04-28 03:25:27,980 - contrastive_training - INFO - Current Learning rate: 0.000050
+2025-04-28 03:25:27,981 - contrastive_training - INFO - Epoch [15/150], Train Loss: 5.2115, Val Loss: 4.2398, Time: 71.59s
+2025-04-28 03:25:28,308 - contrastive_training - INFO - Checkpoint saved to checkpoints\checkpoint_epoch_15.pth
+2025-04-28 03:25:28,309 - contrastive_training - INFO - Creating embedding visualizations...
+2025-04-28 03:26:03,152 - contrastive_training - INFO - Validation loss improved to 4.2398
+2025-04-28 03:27:14,738 - contrastive_training - INFO - Current Learning rate: 0.000050
+2025-04-28 03:27:14,738 - contrastive_training - INFO - Epoch [16/150], Train Loss: 5.0673, Val Loss: 4.2273, Time: 71.59s
+2025-04-28 03:27:14,739 - contrastive_training - INFO - Validation loss improved to 4.2273
+2025-04-28 03:28:26,108 - contrastive_training - INFO - Current Learning rate: 0.000050
+2025-04-28 03:28:26,109 - contrastive_training - INFO - Epoch [17/150], Train Loss: 5.0243, Val Loss: 4.2099, Time: 71.37s
+2025-04-28 03:28:26,110 - contrastive_training - INFO - Validation loss improved to 4.2099
+2025-04-28 03:29:37,285 - contrastive_training - INFO - Current Learning rate: 0.000050
+2025-04-28 03:29:37,285 - contrastive_training - INFO - Epoch [18/150], Train Loss: 4.8590, Val Loss: 4.2201, Time: 71.18s
+2025-04-28 03:29:37,285 - contrastive_training - INFO - No improvement for 1 epochs
+2025-04-28 03:30:48,478 - contrastive_training - INFO - Current Learning rate: 0.000050
+2025-04-28 03:30:48,478 - contrastive_training - INFO - Epoch [19/150], Train Loss: 4.7756, Val Loss: 4.2027, Time: 71.19s
+2025-04-28 03:30:48,478 - contrastive_training - INFO - Validation loss improved to 4.2027
+2025-04-28 03:31:59,657 - contrastive_training - INFO - Current Learning rate: 0.000050
+2025-04-28 03:31:59,657 - contrastive_training - INFO - Epoch [20/150], Train Loss: 4.8340, Val Loss: 4.2119, Time: 71.18s
+2025-04-28 03:32:00,149 - contrastive_training - INFO - Checkpoint saved to checkpoints\checkpoint_epoch_20.pth
+2025-04-28 03:32:00,149 - contrastive_training - INFO - Creating embedding visualizations...
+2025-04-28 03:32:34,785 - contrastive_training - INFO - No improvement for 1 epochs
+2025-04-28 03:33:46,015 - contrastive_training - INFO - Current Learning rate: 0.000049
+2025-04-28 03:33:46,016 - contrastive_training - INFO - Epoch [21/150], Train Loss: 4.7137, Val Loss: 4.2140, Time: 71.23s
+2025-04-28 03:33:46,016 - contrastive_training - INFO - No improvement for 2 epochs
+2025-04-28 03:34:57,194 - contrastive_training - INFO - Current Learning rate: 0.000049
+2025-04-28 03:34:57,194 - contrastive_training - INFO - Epoch [22/150], Train Loss: 4.6430, Val Loss: 4.1967, Time: 71.18s
+2025-04-28 03:34:57,195 - contrastive_training - INFO - Validation loss improved to 4.1967
+2025-04-28 03:36:08,584 - contrastive_training - INFO - Current Learning rate: 0.000049
+2025-04-28 03:36:08,585 - contrastive_training - INFO - Epoch [23/150], Train Loss: 4.5927, Val Loss: 4.2259, Time: 71.39s
+2025-04-28 03:36:08,585 - contrastive_training - INFO - No improvement for 1 epochs
+2025-04-28 03:37:19,758 - contrastive_training - INFO - Current Learning rate: 0.000049
+2025-04-28 03:37:19,758 - contrastive_training - INFO - Epoch [24/150], Train Loss: 4.4782, Val Loss: 4.2514, Time: 71.17s
+2025-04-28 03:37:19,759 - contrastive_training - INFO - No improvement for 2 epochs
+2025-04-28 03:38:30,919 - contrastive_training - INFO - Current Learning rate: 0.000049
+2025-04-28 03:38:30,920 - contrastive_training - INFO - Epoch [25/150], Train Loss: 4.5656, Val Loss: 4.2503, Time: 71.16s
+2025-04-28 03:38:31,222 - contrastive_training - INFO - Checkpoint saved to checkpoints\checkpoint_epoch_25.pth
+2025-04-28 03:38:31,222 - contrastive_training - INFO - Creating embedding visualizations...
+2025-04-28 03:39:06,070 - contrastive_training - INFO - No improvement for 3 epochs
+2025-04-28 03:40:17,489 - contrastive_training - INFO - Current Learning rate: 0.000049
+2025-04-28 03:40:17,489 - contrastive_training - INFO - Epoch [26/150], Train Loss: 4.4564, Val Loss: 4.2519, Time: 71.42s
+2025-04-28 03:40:17,490 - contrastive_training - INFO - No improvement for 4 epochs
+2025-04-28 03:41:28,858 - contrastive_training - INFO - Current Learning rate: 0.000049
+2025-04-28 03:41:28,858 - contrastive_training - INFO - Epoch [27/150], Train Loss: 4.4602, Val Loss: 4.2585, Time: 71.37s
+2025-04-28 03:41:28,858 - contrastive_training - INFO - No improvement for 5 epochs
+2025-04-28 03:42:40,029 - contrastive_training - INFO - Current Learning rate: 0.000049
+2025-04-28 03:42:40,029 - contrastive_training - INFO - Epoch [28/150], Train Loss: 4.4245, Val Loss: 4.2565, Time: 71.17s
+2025-04-28 03:42:40,029 - contrastive_training - INFO - No improvement for 6 epochs
+2025-04-28 03:43:51,398 - contrastive_training - INFO - Current Learning rate: 0.000048
+2025-04-28 03:43:51,399 - contrastive_training - INFO - Epoch [29/150], Train Loss: 4.4016, Val Loss: 4.2925, Time: 71.37s
+2025-04-28 03:43:51,399 - contrastive_training - INFO - No improvement for 7 epochs
+2025-04-28 03:45:02,791 - contrastive_training - INFO - Current Learning rate: 0.000048
+2025-04-28 03:45:02,791 - contrastive_training - INFO - Epoch [30/150], Train Loss: 4.2955, Val Loss: 4.2811, Time: 71.39s
+2025-04-28 03:45:03,112 - contrastive_training - INFO - Checkpoint saved to checkpoints\checkpoint_epoch_30.pth
+2025-04-28 03:45:03,112 - contrastive_training - INFO - Creating embedding visualizations...
+2025-04-28 03:45:37,992 - contrastive_training - INFO - No improvement for 8 epochs
+2025-04-28 03:46:49,365 - contrastive_training - INFO - Current Learning rate: 0.000048
+2025-04-28 03:46:49,366 - contrastive_training - INFO - Epoch [31/150], Train Loss: 4.2761, Val Loss: 4.2867, Time: 71.37s
+2025-04-28 03:46:49,366 - contrastive_training - INFO - No improvement for 9 epochs
+2025-04-28 03:48:00,534 - contrastive_training - INFO - Current Learning rate: 0.000048
+2025-04-28 03:48:00,534 - contrastive_training - INFO - Epoch [32/150], Train Loss: 4.2588, Val Loss: 4.3205, Time: 71.17s
+2025-04-28 03:48:00,535 - contrastive_training - INFO - No improvement for 10 epochs
+2025-04-28 03:49:11,925 - contrastive_training - INFO - Current Learning rate: 0.000048
+2025-04-28 03:49:11,926 - contrastive_training - INFO - Epoch [33/150], Train Loss: 4.2395, Val Loss: 4.2951, Time: 71.39s
+2025-04-28 03:49:11,926 - contrastive_training - INFO - No improvement for 11 epochs
+2025-04-28 03:50:23,095 - contrastive_training - INFO - Current Learning rate: 0.000047
+2025-04-28 03:50:23,095 - contrastive_training - INFO - Epoch [34/150], Train Loss: 4.1270, Val Loss: 4.2746, Time: 71.17s
+2025-04-28 03:50:23,095 - contrastive_training - INFO - No improvement for 12 epochs
+2025-04-28 03:51:34,274 - contrastive_training - INFO - Current Learning rate: 0.000047
+2025-04-28 03:51:34,274 - contrastive_training - INFO - Epoch [35/150], Train Loss: 4.1297, Val Loss: 4.3372, Time: 71.18s
+2025-04-28 03:51:34,602 - contrastive_training - INFO - Checkpoint saved to checkpoints\checkpoint_epoch_35.pth
+2025-04-28 03:51:34,602 - contrastive_training - INFO - Creating embedding visualizations...
+2025-04-28 03:52:09,482 - contrastive_training - INFO - No improvement for 13 epochs
+2025-04-28 03:53:20,631 - contrastive_training - INFO - Current Learning rate: 0.000047
+2025-04-28 03:53:20,631 - contrastive_training - INFO - Epoch [36/150], Train Loss: 3.9631, Val Loss: 4.3486, Time: 71.15s
+2025-04-28 03:53:20,631 - contrastive_training - INFO - No improvement for 14 epochs
+2025-04-28 03:54:32,008 - contrastive_training - INFO - Current Learning rate: 0.000047
+2025-04-28 03:54:32,008 - contrastive_training - INFO - Epoch [37/150], Train Loss: 4.0431, Val Loss: 4.3484, Time: 71.38s
+2025-04-28 03:54:32,008 - contrastive_training - INFO - No improvement for 15 epochs
+2025-04-28 03:55:43,191 - contrastive_training - INFO - Current Learning rate: 0.000046
+2025-04-28 03:55:43,191 - contrastive_training - INFO - Epoch [38/150], Train Loss: 4.0566, Val Loss: 4.3603, Time: 71.18s
+2025-04-28 03:55:43,191 - contrastive_training - INFO - No improvement for 16 epochs
+2025-04-28 03:56:54,377 - contrastive_training - INFO - Current Learning rate: 0.000046
+2025-04-28 03:56:54,378 - contrastive_training - INFO - Epoch [39/150], Train Loss: 3.9531, Val Loss: 4.3997, Time: 71.19s
+2025-04-28 03:56:54,378 - contrastive_training - INFO - No improvement for 17 epochs
+2025-04-28 03:58:05,761 - contrastive_training - INFO - Current Learning rate: 0.000046
+2025-04-28 03:58:05,761 - contrastive_training - INFO - Epoch [40/150], Train Loss: 4.0125, Val Loss: 4.3768, Time: 71.38s
+2025-04-28 03:58:06,087 - contrastive_training - INFO - Checkpoint saved to checkpoints\checkpoint_epoch_40.pth
+2025-04-28 03:58:06,088 - contrastive_training - INFO - Creating embedding visualizations...
+2025-04-28 03:58:41,171 - contrastive_training - INFO - No improvement for 18 epochs
+2025-04-28 03:59:52,707 - contrastive_training - INFO - Current Learning rate: 0.000046
+2025-04-28 03:59:52,707 - contrastive_training - INFO - Epoch [41/150], Train Loss: 3.9791, Val Loss: 4.3761, Time: 71.54s
+2025-04-28 03:59:52,707 - contrastive_training - INFO - No improvement for 19 epochs
+2025-04-28 04:01:04,076 - contrastive_training - INFO - Current Learning rate: 0.000045
+2025-04-28 04:01:04,076 - contrastive_training - INFO - Epoch [42/150], Train Loss: 3.8753, Val Loss: 4.3869, Time: 71.37s
+2025-04-28 04:01:04,076 - contrastive_training - INFO - No improvement for 20 epochs
+2025-04-28 04:01:04,076 - contrastive_training - INFO - Early stopping triggered after 42 epochs
+2025-04-28 04:01:04,168 - contrastive_training - INFO - Best model saved to checkpoints\best_model.pth
+2025-04-28 04:01:04,168 - contrastive_training - INFO - 
+Training Summary:
+2025-04-28 04:01:04,168 - contrastive_training - INFO - Total training time: 3319.89 seconds
+2025-04-28 04:01:04,168 - contrastive_training - INFO - Best validation loss: 4.1967 (achieved on epoch 22)
+2025-04-28 04:01:04,169 - contrastive_training - INFO - Plotting training history...
+2025-04-28 04:01:04,361 - contrastive_training - INFO - Training history plot saved to contrastive_training_history.png
+2025-04-28 04:08:16,616 - contrastive_training - INFO - Training completed and model saved as contrastive_model_convnext_tiny.pth!
+2025-04-28 04:08:16,617 - contrastive_training - INFO - 
+Evaluating on test set...
+2025-04-28 04:08:49,533 - contrastive_training - INFO - Test Loss: 4.2376
+2025-04-28 04:09:22,131 - contrastive_training - INFO - Matching accuracy on test set: 1.06%
