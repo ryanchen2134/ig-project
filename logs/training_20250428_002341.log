@@ -15,3 +15,14 @@
 2025-04-28 00:23:41,301 - contrastive_training - INFO - Image folder: data/final-sample-dataset/images
 2025-04-28 00:23:41,665 - contrastive_training - INFO - Dataset successfully loaded with 1247 samples
 2025-04-28 00:23:41,688 - contrastive_training - INFO - Song embedding dimension: 128
+2025-04-28 00:24:00,316 - contrastive_training - INFO - Train set: 872 samples
+2025-04-28 00:24:00,316 - contrastive_training - INFO - Validation set: 187 samples
+2025-04-28 00:24:00,317 - contrastive_training - INFO - Test set: 188 samples
+2025-04-28 00:24:00,317 - contrastive_training - INFO - Actual batch sizes - Train: 64, Val: 64, Test: 64
+2025-04-28 00:24:00,317 - contrastive_training - INFO - DataLoaders created successfully
+2025-04-28 00:24:00,445 - contrastive_training - INFO - Model initialized successfully with resnet18 backbone
+2025-04-28 00:24:00,445 - contrastive_training - INFO - Optimizer and scheduler initialized
+2025-04-28 00:24:00,446 - contrastive_training - INFO - Starting training...
+2025-04-28 00:24:00,595 - contrastive_training - INFO - Starting training on device: cuda
+2025-04-28 00:24:00,595 - contrastive_training - INFO - Number of training batches: 14
+2025-04-28 00:24:00,595 - contrastive_training - INFO - Number of validation batches: 3

@@ -435,21 +435,21 @@ if __name__ == "__main__":
     parser.add_argument('--backbone', type=str, default='resnet18', 
                         choices=['resnet18', 'efficientnet_b0', 'convnext_tiny'],
                         help='Backbone architecture for image encoder')
-    parser.add_argument('--batch_size', type=int, default=32, 
+    parser.add_argument('--batch_size', type=int, default=64, 
                         help='Batch size for training')
     parser.add_argument('--embedding_dim', type=int, default=128, 
                         help='Dimension of embedding space')
-    parser.add_argument('--lr', type=float, default=1e-4, 
+    parser.add_argument('--lr', type=float, default=3e-4, 
                         help='Learning rate')
-    parser.add_argument('--weight_decay', type=float, default=2e-3, 
+    parser.add_argument('--weight_decay', type=float, default=1e-4, 
                         help='Weight decay for optimizer')
-    parser.add_argument('--epochs', type=int, default=100, 
+    parser.add_argument('--epochs', type=int, default=300, 
                         help='Maximum number of epochs')
     parser.add_argument('--patience', type=int, default=15, 
                         help='Early stopping patience')
-    parser.add_argument('--temperature', type=float, default=0.06, 
+    parser.add_argument('--temperature', type=float, default=0.05, 
                         help='Temperature parameter for NT-Xent loss')
-    parser.add_argument('--hard_negative_weight', type=float, default=0.5, 
+    parser.add_argument('--hard_negative_weight', type=float, default=0.2, 
                         help='Weight for hard negative mining (0 to disable)')
     parser.add_argument('--mixup_alpha', type=float, default=0.4, 
                         help='Alpha parameter for mixup augmentation (0 to disable)')
@@ -457,9 +457,9 @@ if __name__ == "__main__":
                         help='Path to the CSV data file')
     parser.add_argument('--img_folder', type=str, default="data/final-sample-dataset/images",
                         help='Path to the folder containing images')
-    parser.add_argument('--warmup_epochs', type=int, default=5,
+    parser.add_argument('--warmup_epochs', type=int, default=10,
                         help='Number of epochs for learning rate warmup')
-    parser.add_argument('--min_lr', type=float, default=1e-5,
+    parser.add_argument('--min_lr', type=float, default=5e-6,
                         help='Minimum learning rate after cosine decay')
     
     args = parser.parse_args()
@@ -613,49 +613,44 @@ if __name__ == "__main__":
 
     # Optional: Evaluate on test set
     logger.info("\nEvaluating on test set...")
-
     try:
         trained_model.eval()
         test_loss = 0.0
-        
+        total_correct_top5 = 0
+        total_samples = 0
+
         with torch.no_grad():
             for images, song_embeddings in test_loader:
+                batch_size = images.size(0)  # Important: get actual batch size here
                 images = images.to(device)
                 song_embeddings = song_embeddings.to(device)
-                
+
+                # Forward pass
                 image_embeddings, projected_song_embeddings = trained_model(images, song_embeddings)
+
+                # Compute loss
                 loss = loss_fn(image_embeddings, projected_song_embeddings)
                 test_loss += loss.item()
-        
-        avg_test_loss = test_loss / len(test_loader)
-        logger.info(f"Test Loss: {avg_test_loss:.4f}")
-        
-        # Additional evaluation: check embedding similarity for matching pairs
-        total_correct = 0
-        total_samples = 0
-        
-        with torch.no_grad():
-            for images, song_embeddings in test_loader:
-                batch_size = images.size(0)
-                images = images.to(device)
-                song_embeddings = song_embeddings.to(device)
-                
-                # Get embeddings
-                image_embeddings, projected_song_embeddings = trained_model(images, song_embeddings)
-                
+
                 # Compute similarity matrix for the batch
                 similarity = torch.matmul(image_embeddings, projected_song_embeddings.T)
-                
-                # Check if the highest similarity for each image is with its corresponding song
-                _, indices = similarity.max(dim=1)
-                correct = (indices == torch.arange(batch_size).to(device)).sum().item()
-                
-                total_correct += correct
-                total_samples += batch_size
-        
-        accuracy = total_correct / total_samples * 100
-        logger.info(f"Matching accuracy on test set: {accuracy:.2f}%")
-        
+
+                # Top-5 accuracy computation
+                _, top5_indices = similarity.topk(k=5, dim=1)
+                targets = torch.arange(batch_size).to(device)  # Correct: batch_size here, not global batch_size
+                correct_top5 = (top5_indices == targets.view(-1, 1)).any(dim=1).sum().item()
+
+                total_correct_top5 += correct_top5
+                total_samples += batch_size  # Add actual batch size
+
+        # Calculate average test loss
+        avg_test_loss = test_loss / len(test_loader)
+        logger.info(f"Test Loss: {avg_test_loss:.4f}")
+
+        # Calculate top-5 accuracy
+        accuracy_top5 = total_correct_top5 / total_samples * 100
+        logger.info(f"Top-5 matching accuracy on test set: {accuracy_top5:.2f}%")
+
     except Exception as e:
         logger.error(f"Error during testing: {str(e)}")
         logger.exception("Stack trace:")
