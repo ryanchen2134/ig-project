@@ -171,11 +171,3 @@ def retrieve_songs_for_image(model, image_path, song_database, top_k=5, device='
         })
     
     return results
-
-# Main function remains the same
-if __name__ == "__main__":
-    import argparse
-    from models.decoder.contrastive import ContrastiveImageSongModel
-    
-    # Rest of the code remains unchanged
-    # ...
