@@ -5,7 +5,7 @@ import mimetypes
 from urllib.parse import urlparse
 
 #Configuration
-csv_file_path ="data/new_encoded.csv"
+csv_file_path ="data/csv files/rawr_dinosaur.csv"
 image_url_column = 'link'
 image_name_column = 'shortcode'
 output_folder = 'data/img_folder'

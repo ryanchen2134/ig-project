@@ -47,11 +47,42 @@ class ContrastiveImageSongModel(nn.Module):
                 nn.init.constant_(m.weight, 1)
                 nn.init.constant_(m.bias, 0)
         
-    def forward(self, images, song_embeddings):
-        """Forward pass through the model"""
-        image_embeddings = self.image_encoder(images)
-        projected_song_embeddings = F.normalize(self.song_projection(song_embeddings), p=2, dim=1)
-        return image_embeddings, projected_song_embeddings
+    def forward(self, images=None, song_features=None, song_only=False, image_only=False):
+        """
+        Forward pass through the model
+        
+        Args:
+            images: Batch of images (or None if song_only=True)
+            song_features: Batch of song embeddings (or None if image_only=True)
+            song_only: If True, only process song features
+            image_only: If True, only process images
+        
+        Returns:
+            image_embeddings, song_embeddings
+        """
+        if song_only and song_features is not None:
+            # Process only song features
+            song_embedding = self.song_projection(song_features)
+            # Normalize embedding to unit length
+            song_embedding = F.normalize(song_embedding, p=2, dim=1)
+            return None, song_embedding
+            
+        if image_only and images is not None:
+            # Process only images
+            image_embedding = self.image_encoder(images)
+            # Normalize embedding to unit length
+            image_embedding = F.normalize(image_embedding, p=2, dim=1)
+            return image_embedding, None
+        
+        # Process both modalities (original behavior)
+        image_embedding = self.image_encoder(images)
+        song_embedding = self.song_projection(song_features)
+        
+        # Normalize embeddings to unit length
+        image_embedding = F.normalize(image_embedding, p=2, dim=1)
+        song_embedding = F.normalize(song_embedding, p=2, dim=1)
+        
+        return image_embedding, song_embedding
         
     def get_image_embedding(self, image):
         """Get the embedding for an image"""
