@@ -14,3 +14,5 @@ there will be an option that allows users to input their own SPOTIFY playlist an
 i just want to be part of your symphony!!! 🌈🌈🌈🐬🐬🐬🌼🌼🌼🍉🍉🍇
 
 yatta!💕
+
+![My Movie 1](https://github.com/user-attachments/assets/dbc57ba7-0f8e-4ce8-8bc0-863ea62edc25)
