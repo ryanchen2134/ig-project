@@ -1,4 +1,6 @@
 .env
+.pth
+.log
 venv
 temp.json
 .cache

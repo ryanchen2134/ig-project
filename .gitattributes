@@ -1,1 +1,2 @@
-ig_scraperv3/json/all_instagram_data.json filter=lfs diff=lfs merge=lfs -text
+data/scraper/ig_scraperv3/json/all_instagram_data.json filter=lfs diff=lfs merge=lfs -text
+*.pth filter=lfs diff=lfs merge=lfs -text

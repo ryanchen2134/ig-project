@@ -1,0 +1,28 @@
+2025-04-26 20:52:06,862 - contrastive_training - INFO - Random seeds set for reproducibility
+2025-04-26 20:52:06,862 - contrastive_training - INFO - Training parameters:
+2025-04-26 20:52:06,862 - contrastive_training - INFO - Backbone architecture: resnet18
+2025-04-26 20:52:06,862 - contrastive_training - INFO - Batch size: 8
+2025-04-26 20:52:06,862 - contrastive_training - INFO - Embedding dimension: 64
+2025-04-26 20:52:06,863 - contrastive_training - INFO - Learning rate: 0.0001
+2025-04-26 20:52:06,863 - contrastive_training - INFO - Weight decay: 0.0001
+2025-04-26 20:52:06,873 - contrastive_training - INFO - Max epochs: 100
+2025-04-26 20:52:06,873 - contrastive_training - INFO - Early stopping patience: 15
+2025-04-26 20:52:06,873 - contrastive_training - INFO - NT-Xent temperature: 0.1
+2025-04-26 20:52:06,873 - contrastive_training - INFO - Hard negative weight: 0.5
+2025-04-26 20:52:06,873 - contrastive_training - INFO - Mixup alpha: 0.2
+2025-04-26 20:52:06,897 - contrastive_training - INFO - Using device: cuda
+2025-04-26 20:52:06,899 - contrastive_training - INFO - Data path: essentia_audio_encoder/final-sample-dataset/data.csv
+2025-04-26 20:52:06,899 - contrastive_training - INFO - Image folder: essentia_audio_encoder/final-sample-dataset/images
+2025-04-26 20:52:06,963 - contrastive_training - INFO - Dataset successfully loaded with 459 samples
+2025-04-26 20:52:06,984 - contrastive_training - INFO - Song embedding dimension: 72
+2025-04-26 20:52:14,189 - contrastive_training - INFO - Train set: 321 samples
+2025-04-26 20:52:14,190 - contrastive_training - INFO - Validation set: 69 samples
+2025-04-26 20:52:14,190 - contrastive_training - INFO - Test set: 69 samples
+2025-04-26 20:52:14,190 - contrastive_training - INFO - Actual batch sizes - Train: 8, Val: 8, Test: 8
+2025-04-26 20:52:14,190 - contrastive_training - INFO - DataLoaders created successfully
+2025-04-26 20:52:14,310 - contrastive_training - INFO - Model initialized successfully with resnet18 backbone
+2025-04-26 20:52:14,311 - contrastive_training - INFO - Optimizer and scheduler initialized
+2025-04-26 20:52:14,311 - contrastive_training - INFO - Starting training...
+2025-04-26 20:52:14,436 - contrastive_training - INFO - Starting training on device: cuda
+2025-04-26 20:52:14,436 - contrastive_training - INFO - Number of training batches: 41
+2025-04-26 20:52:14,436 - contrastive_training - INFO - Number of validation batches: 9

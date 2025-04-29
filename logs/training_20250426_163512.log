@@ -1,0 +1,64 @@
+2025-04-26 16:35:12,532 - contrastive_training - INFO - Random seeds set for reproducibility
+2025-04-26 16:35:12,532 - contrastive_training - INFO - Training parameters:
+2025-04-26 16:35:12,532 - contrastive_training - INFO - Backbone architecture: resnet18
+2025-04-26 16:35:12,532 - contrastive_training - INFO - Batch size: 8
+2025-04-26 16:35:12,532 - contrastive_training - INFO - Embedding dimension: 64
+2025-04-26 16:35:12,532 - contrastive_training - INFO - Learning rate: 0.0005
+2025-04-26 16:35:12,532 - contrastive_training - INFO - Weight decay: 0.0001
+2025-04-26 16:35:12,535 - contrastive_training - INFO - Max epochs: 100
+2025-04-26 16:35:12,537 - contrastive_training - INFO - Early stopping patience: 15
+2025-04-26 16:35:12,537 - contrastive_training - INFO - NT-Xent temperature: 0.1
+2025-04-26 16:35:12,537 - contrastive_training - INFO - Hard negative weight: 0.5
+2025-04-26 16:35:12,537 - contrastive_training - INFO - Mixup alpha: 0.2
+2025-04-26 16:35:12,563 - contrastive_training - INFO - Using device: cuda
+2025-04-26 16:35:12,563 - contrastive_training - INFO - Data path: essentia_audio_encoder/final-sample-dataset/data.csv
+2025-04-26 16:35:12,563 - contrastive_training - INFO - Image folder: essentia_audio_encoder/final-sample-dataset/images
+2025-04-26 16:35:12,625 - contrastive_training - INFO - Dataset successfully loaded with 459 samples
+2025-04-26 16:35:12,647 - contrastive_training - INFO - Song embedding dimension: 72
+2025-04-26 16:35:20,142 - contrastive_training - INFO - Train set: 321 samples
+2025-04-26 16:35:20,142 - contrastive_training - INFO - Validation set: 69 samples
+2025-04-26 16:35:20,142 - contrastive_training - INFO - Test set: 69 samples
+2025-04-26 16:35:20,142 - contrastive_training - INFO - Actual batch sizes - Train: 8, Val: 8, Test: 8
+2025-04-26 16:35:20,142 - contrastive_training - INFO - DataLoaders created successfully
+2025-04-26 16:35:20,260 - contrastive_training - INFO - Model initialized successfully with resnet18 backbone
+2025-04-26 16:35:20,261 - contrastive_training - INFO - Optimizer and scheduler initialized
+2025-04-26 16:35:20,261 - contrastive_training - INFO - Starting training...
+2025-04-26 16:35:20,379 - contrastive_training - INFO - Starting training on device: cuda
+2025-04-26 16:35:20,380 - contrastive_training - INFO - Number of training batches: 41
+2025-04-26 16:35:20,380 - contrastive_training - INFO - Number of validation batches: 9
+2025-04-26 16:35:54,513 - contrastive_training - ERROR - Error during training: Expected more than 1 value per channel when training, got input size torch.Size([1, 256])
+2025-04-26 16:35:54,513 - contrastive_training - ERROR - Stack trace:
+Traceback (most recent call last):
+  File "C:\Users\Michael\ig-project\train.py", line 486, in <module>
+    trained_model, history = train_contrastive_model(
+  File "C:\Users\Michael\ig-project\train.py", line 115, in train_contrastive_model
+    image_embeddings, projected_song_embeddings = model(images, song_embeddings)
+  File "C:\Users\Michael\anaconda3\envs\torch-gpu\lib\site-packages\torch\nn\modules\module.py", line 1736, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "C:\Users\Michael\anaconda3\envs\torch-gpu\lib\site-packages\torch\nn\modules\module.py", line 1747, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "C:\Users\Michael\ig-project\models\decoder\contrastive.py", line 52, in forward
+    image_embeddings = self.image_encoder(images)
+  File "C:\Users\Michael\anaconda3\envs\torch-gpu\lib\site-packages\torch\nn\modules\module.py", line 1736, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "C:\Users\Michael\anaconda3\envs\torch-gpu\lib\site-packages\torch\nn\modules\module.py", line 1747, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "C:\Users\Michael\ig-project\models\decoder\img_decoder.py", line 59, in forward
+    embedding = self.projection(features)
+  File "C:\Users\Michael\anaconda3\envs\torch-gpu\lib\site-packages\torch\nn\modules\module.py", line 1736, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "C:\Users\Michael\anaconda3\envs\torch-gpu\lib\site-packages\torch\nn\modules\module.py", line 1747, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "C:\Users\Michael\anaconda3\envs\torch-gpu\lib\site-packages\torch\nn\modules\container.py", line 250, in forward
+    input = module(input)
+  File "C:\Users\Michael\anaconda3\envs\torch-gpu\lib\site-packages\torch\nn\modules\module.py", line 1736, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "C:\Users\Michael\anaconda3\envs\torch-gpu\lib\site-packages\torch\nn\modules\module.py", line 1747, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "C:\Users\Michael\anaconda3\envs\torch-gpu\lib\site-packages\torch\nn\modules\batchnorm.py", line 193, in forward
+    return F.batch_norm(
+  File "C:\Users\Michael\anaconda3\envs\torch-gpu\lib\site-packages\torch\nn\functional.py", line 2810, in batch_norm
+    _verify_batch_size(input.size())
+  File "C:\Users\Michael\anaconda3\envs\torch-gpu\lib\site-packages\torch\nn\functional.py", line 2776, in _verify_batch_size
+    raise ValueError(
+ValueError: Expected more than 1 value per channel when training, got input size torch.Size([1, 256])
