@@ -10,6 +10,7 @@ import time
 import math
 import logging
 from graph import visualize_embeddings
+from visualizer import EnhancedVisualization
 from torch.optim.lr_scheduler import CosineAnnealingWarmRestarts, _LRScheduler
 import argparse
 
@@ -25,6 +26,10 @@ def setup_logger(log_dir='logs'):
     # Create logger
     logger = logging.getLogger('contrastive_training')
     logger.setLevel(logging.INFO)
+    
+    # Clear any existing handlers
+    if logger.handlers:
+        logger.handlers = []
     
     # Create formatters
     file_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -88,239 +93,289 @@ def calculate_recall_metrics(image_embeddings, song_embeddings, ks=[1, 5, 10]):
     
     return metrics
 
-def train_contrastive_model(model, train_loader, val_loader, optimizer, loss_fn, 
-                        num_epochs=100, patience=15, device='cuda', checkpoint_dir='checkpoints', 
-                        visualize_every=5, logger=None, scheduler=None, mixup_alpha=0.2,
-                        validate_every=1, eval_recalls=True, temperature_annealing=True):
-        """
-        Enhanced training function with better evaluation metrics
-        """
-        # Create checkpoint directory if it doesn't exist
-        os.makedirs(checkpoint_dir, exist_ok=True)
+def train_contrastive_model(
+    model, train_loader, val_loader, test_loader, optimizer, loss_fn, 
+    num_epochs=100, patience=20, device='cuda', 
+    save_dir='checkpoints', logger=None, scheduler=None,
+    validate_every=1, mixup_alpha=0.4, multiple_views=True,
+    visualizer=None):
+    """
+    Enhanced training function with support for multiple views and improved metrics.
+    """
+    # Create save directory
+    os.makedirs(save_dir, exist_ok=True)
+    
+    if logger is None:
+        logger = logging.getLogger('contrastive_training')
+    
+    # Move model to device
+    model = model.to(device)
+    
+    # Tracking variables
+    best_val_loss = float('inf')
+    best_recall = 0.0
+    best_model = None
+    no_improve_count = 0
+    best_epoch = 0
+    
+    # History for plotting
+    history = {
+        'train_loss': [],
+        'val_loss': [],
+        'recalls': [],
+        'learning_rates': []
+    }
+    
+    logger.info(f"Starting enhanced training with multiple views on device: {device}")
+    start_time = time.time()
+    
+    for epoch in range(num_epochs):
+        epoch_start_time = time.time()
         
-        if logger is None:
-            logger = logging.getLogger('contrastive_training')
+        # Training phase
+        model.train()
+        train_loss = 0.0
         
-        model = model.to(device)
-        best_val_loss = float('inf')
-        best_recall = 0.0  # Track best recall@1
-        best_model = None
-        no_improve_count = 0
-        best_epoch = 0
-        
-        train_losses = []
-        val_losses = []
-        recalls = []
-        learning_rates = []
-        temperatures = []  # If using temperature annealing
-        
-        # Initial temperature
-        temperature = 0.1
-        temp_min = 0.01
-        
-        # Track training time
-        start_time = time.time()
-        
-        logger.info(f"Starting enhanced training on device: {device}")
-        
-        for epoch in range(num_epochs):
-            epoch_start_time = time.time()
-
-            # Training phase
-            model.train()
-            train_loss = 0.0
-            
-            # Temperature annealing (gradually decrease temperature)
-            if temperature_annealing:
-                temperature = max(temp_min, 0.1 * (1.0 - epoch / (num_epochs * 0.8)))
-                temperatures.append(temperature)
-                if hasattr(loss_fn, 'temperature'):
-                    loss_fn.temperature = temperature
-            
-            for batch_idx, (images, song_embeddings) in enumerate(train_loader):
+        for batch_idx, batch_data in enumerate(train_loader):
+            # Handle multiple views
+            if multiple_views and isinstance(batch_data[0], list):
+                views, song_embeddings = batch_data
+                song_embeddings = song_embeddings.to(device)
+                
+                # Process each view
+                all_losses = []
+                for view_idx, view in enumerate(views):
+                    view = view.to(device)
+                    
+                    # Apply mixup if enabled
+                    if mixup_alpha > 0 and np.random.random() < 0.7:
+                        # Get random indices for mixing
+                        indices = torch.randperm(view.size(0)).to(device)
+                        # Generate mixing coefficient
+                        lam = np.random.beta(mixup_alpha, mixup_alpha)
+                        # Mix images and song embeddings
+                        mixed_view = lam * view + (1 - lam) * view[indices]
+                        mixed_song_embeddings = lam * song_embeddings + (1 - lam) * song_embeddings[indices]
+                        
+                        # Forward pass with mixed data
+                        image_embeddings, projected_song_embeddings = model(mixed_view, mixed_song_embeddings)
+                    else:
+                        # Regular forward pass
+                        image_embeddings, projected_song_embeddings = model(view, song_embeddings)
+                    
+                    # Compute loss
+                    loss = loss_fn(image_embeddings, projected_song_embeddings)
+                    all_losses.append(loss)
+                
+                # Average loss across views
+                loss = torch.stack(all_losses).mean()
+            else:
+                # Single view processing
+                images, song_embeddings = batch_data
                 images = images.to(device)
                 song_embeddings = song_embeddings.to(device)
                 
-                # Apply mixup augmentation with probability
-                if mixup_alpha > 0 and np.random.random() < 0.7:  # 70% probability
-                    images, song_embeddings = mixup_batch(images, song_embeddings, alpha=mixup_alpha)
-                
-                optimizer.zero_grad()
-                
-                # Forward pass
-                image_embeddings, projected_song_embeddings = model(images, song_embeddings)
-                
-                # Calculate loss
-                if hasattr(model, 'similarity'):
-                    # Use model's similarity function if available
-                    sim_matrix = model.similarity(image_embeddings, projected_song_embeddings)
-                    loss = loss_fn(image_embeddings, projected_song_embeddings, use_model_temp=True, model_sim=sim_matrix)
+                # Apply mixup if enabled
+                if mixup_alpha > 0 and np.random.random() < 0.7:
+                    indices = torch.randperm(images.size(0)).to(device)
+                    lam = np.random.beta(mixup_alpha, mixup_alpha)
+                    mixed_images = lam * images + (1 - lam) * images[indices]
+                    mixed_song_embeddings = lam * song_embeddings + (1 - lam) * song_embeddings[indices]
+                    
+                    image_embeddings, projected_song_embeddings = model(mixed_images, mixed_song_embeddings)
                 else:
+                    image_embeddings, projected_song_embeddings = model(images, song_embeddings)
+                
+                # Compute loss
+                loss = loss_fn(image_embeddings, projected_song_embeddings)
+            
+            # Backward and optimize
+            optimizer.zero_grad()
+            loss.backward()
+            
+            # Gradient clipping
+            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+            
+            optimizer.step()
+            train_loss += loss.item()
+        
+        # Calculate average training loss
+        avg_train_loss = train_loss / len(train_loader)
+        history['train_loss'].append(avg_train_loss)
+        
+        # Validation phase
+        if epoch % validate_every == 0:
+            model.eval()
+            val_loss = 0.0
+            
+            # For computing recall metrics
+            all_image_embeddings = []
+            all_song_embeddings = []
+            
+            with torch.no_grad():
+                for images, song_embeddings in val_loader:
+                    images = images.to(device)
+                    song_embeddings = song_embeddings.to(device)
+                    
+                    # Forward pass
+                    image_embeddings, projected_song_embeddings = model(images, song_embeddings)
+                    
+                    # Calculate loss
                     loss = loss_fn(image_embeddings, projected_song_embeddings)
-                
-                if torch.isnan(loss) or torch.isinf(loss):
-                    logger.error(f"Training loss is {loss.item()}, stopping training")
-                    return model, {'train_loss': train_losses, 'val_loss': val_losses}
-                
-                # Backward pass and optimize
-                loss.backward()
-                torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
-                optimizer.step()
-                
-                train_loss += loss.item()
-                
-            avg_train_loss = train_loss / len(train_loader)
-            train_losses.append(avg_train_loss)
-            
-            # Validation phase - only validate every N epochs to speed up training
-            if epoch % validate_every == 0:
-                model.eval()
-                val_loss = 0.0
-                
-                # For computing recall metrics
-                if eval_recalls:
-                    all_image_embeddings = []
-                    all_song_embeddings = []
-                
-                with torch.no_grad():
-                    for images, song_embeddings in val_loader:
-                        images = images.to(device)
-                        song_embeddings = song_embeddings.to(device)
-                        
-                        # Forward pass
-                        image_embeddings, projected_song_embeddings = model(images, song_embeddings)
-                        
-                        # Calculate loss
-                        if hasattr(model, 'similarity'):
-                            sim_matrix = model.similarity(image_embeddings, projected_song_embeddings)
-                            loss = loss_fn(image_embeddings, projected_song_embeddings, use_model_temp=True, model_sim=sim_matrix)
-                        else:
-                            loss = loss_fn(image_embeddings, projected_song_embeddings)
-                        
-                        val_loss += loss.item()
-                        
-                        # Collect embeddings for recall calculation
-                        if eval_recalls:
-                            all_image_embeddings.append(image_embeddings.cpu())
-                            all_song_embeddings.append(projected_song_embeddings.cpu())
-                
-                avg_val_loss = val_loss / len(val_loader)
-                val_losses.append(avg_val_loss)
-                
-                # Calculate recall metrics
-                if eval_recalls:
-                    all_image_embeddings = torch.cat(all_image_embeddings, dim=0)
-                    all_song_embeddings = torch.cat(all_song_embeddings, dim=0)
+                    val_loss += loss.item()
                     
-                    # Calculate recalls
-                    recall_metrics = calculate_recall_metrics(all_image_embeddings, all_song_embeddings)
-                    recalls.append(recall_metrics)
-                    
-                    current_recall = recall_metrics['r@1_i2s']  # Use image->song Recall@1
-                    logger.info(f"Recalls: R@1: {recall_metrics['r@1_i2s']:.2f}%, "
-                            f"R@5: {recall_metrics['r@5_i2s']:.2f}%, "
-                            f"R@10: {recall_metrics['r@10_i2s']:.2f}%")
-            else:
-                # Fill with previous values when not validating
-                if val_losses:
-                    val_losses.append(val_losses[-1])
-                else:
-                    val_losses.append(float('inf'))
-                current_recall = best_recall
+                    # Collect embeddings for recall calculation
+                    all_image_embeddings.append(image_embeddings.cpu())
+                    all_song_embeddings.append(projected_song_embeddings.cpu())
             
-            # Step the scheduler if provided
+            # Calculate average validation loss
+            avg_val_loss = val_loss / len(val_loader)
+            history['val_loss'].append(avg_val_loss)
+            
+            # Concatenate all embeddings
+            all_image_embeddings = torch.cat(all_image_embeddings, dim=0)
+            all_song_embeddings = torch.cat(all_song_embeddings, dim=0)
+            
+            # Calculate recall metrics
+            recall_metrics = calculate_recall_metrics(all_image_embeddings, all_song_embeddings)
+            history['recalls'].append(recall_metrics)
+            
+            # Log recalls
+            logger.info(f"Recalls: R@1: {recall_metrics['r@1_i2s']:.2f}%, "
+                      f"R@5: {recall_metrics['r@5_i2s']:.2f}%, "
+                      f"R@10: {recall_metrics['r@10_i2s']:.2f}%")
+            
+            # Visualize embeddings if visualizer provided
+            if visualizer is not None and (epoch % 5 == 0 or epoch == num_epochs - 1):
+                visualizer.visualize_embedding_space(
+                    all_image_embeddings, all_song_embeddings,
+                    method='both', epoch=epoch+1
+                )
+                visualizer.visualize_similarity_matrix(
+                    all_image_embeddings, all_song_embeddings,
+                    temperature=loss_fn.temperature, epoch=epoch+1
+                )
+            
+            # Step scheduler if provided
             if scheduler is not None:
                 if isinstance(scheduler, torch.optim.lr_scheduler.ReduceLROnPlateau):
                     scheduler.step(avg_val_loss)
                 else:
                     scheduler.step()
                 
-                # Log the current learning rate
+                # Log current learning rate
                 current_lr = optimizer.param_groups[0]['lr']
-                learning_rates.append(current_lr)
+                history['learning_rates'].append(current_lr)
                 logger.info(f"Current Learning rate: {current_lr:.6f}")
-
+            
             # Calculate epoch time
             epoch_time = time.time() - epoch_start_time
-            
             logger.info(f"Epoch [{epoch+1}/{num_epochs}], Train Loss: {avg_train_loss:.4f}, "
-                    f"Val Loss: {avg_val_loss:.4f}, Time: {epoch_time:.2f}s")
+                      f"Val Loss: {avg_val_loss:.4f}, Time: {epoch_time:.2f}s")
             
-            # Create Visualizations Periodically
-            if (epoch + 1) % visualize_every == 0 or epoch == 0 or epoch == num_epochs - 1:
-                logger.info("Creating embedding visualizations...")
-                visualize_embeddings(
-                    all_image_embeddings, all_song_embeddings,
-                    method='both', epoch=epoch+1,
-                    save_dir=os.path.join(checkpoint_dir, 'visualizations')
-                )
-
-            # Early stopping check - use recall@1 instead of loss if evaluating recalls
-            improved = False
-            if eval_recalls and current_recall > best_recall:
+            # Check for improvement - use R@1 for early stopping
+            current_recall = recall_metrics['r@1_i2s']
+            
+            if current_recall > best_recall:
                 best_recall = current_recall
                 best_model = model.state_dict().copy()
                 best_epoch = epoch + 1
                 no_improve_count = 0
-                improved = True
                 logger.info(f"Recall@1 improved to {best_recall:.2f}%")
-            elif not eval_recalls and avg_val_loss < best_val_loss:
-                best_val_loss = avg_val_loss
-                best_model = model.state_dict().copy()
-                best_epoch = epoch + 1
-                no_improve_count = 0
-                improved = True
-                logger.info(f"Validation loss improved to {avg_val_loss:.4f}")
                 
-            if not improved:
+                # Save best model
+                best_model_path = os.path.join(save_dir, 'best_model.pth')
+                torch.save({
+                    'epoch': best_epoch,
+                    'model_state_dict': model.state_dict(),
+                    'embedding_dim': model.embedding_dim,
+                    'backbone_type': model.backbone_type,
+                    'best_recall': best_recall
+                }, best_model_path)
+            else:
                 no_improve_count += 1
                 logger.info(f"No improvement for {no_improve_count} epochs")
                 
                 if no_improve_count >= patience:
                     logger.info(f"Early stopping triggered after {epoch+1} epochs")
                     break
-        
-        # Load best model
+    
+    # Training completed, evaluate on test set
+    if best_model is not None:
         model.load_state_dict(best_model)
-        
-        # Save best model
-        best_model_path = os.path.join(checkpoint_dir, 'best_model.pth')
-        torch.save({
-            'epoch': best_epoch,
-            'model_state_dict': model.state_dict(),
-            'embedding_dim': model.embedding_dim,
-            'best_val_loss': best_val_loss if not eval_recalls else None,
-            'best_recall': best_recall if eval_recalls else None
-        }, best_model_path)
-        
-        # Print training summary
-        total_time = time.time() - start_time
-        logger.info(f"\nTraining Summary:")
-        logger.info(f"Total training time: {total_time:.2f} seconds")
-        
-        if eval_recalls:
-            logger.info(f"Best Recall@1: {best_recall:.2f}% (achieved on epoch {best_epoch})")
-        else:
-            logger.info(f"Best validation loss: {best_val_loss:.4f} (achieved on epoch {best_epoch})")
-        
-        history = {
-            'train_loss': train_losses,
-            'val_loss': val_losses,
-            'best_epoch': best_epoch,
-            'total_time': total_time,
-            'learning_rates': learning_rates,
-        }
-        
-        if eval_recalls:
-            history['recalls'] = recalls
-            history['best_recall'] = best_recall
-        else:
-            history['best_val_loss'] = best_val_loss
+    
+    # Evaluate on test set
+    logger.info("\nEvaluating on test set...")
+    model.eval()
+    test_loss = 0.0
+    all_image_embeddings = []
+    all_song_embeddings = []
+    
+    with torch.no_grad():
+        for images, song_embeddings in test_loader:
+            images = images.to(device)
+            song_embeddings = song_embeddings.to(device)
             
-        if temperature_annealing:
-            history['temperatures'] = temperatures
+            # Forward pass
+            image_embeddings, projected_song_embeddings = model(images, song_embeddings)
+            
+            # Compute loss
+            loss = loss_fn(image_embeddings, projected_song_embeddings)
+            test_loss += loss.item()
+            
+            # Collect embeddings
+            all_image_embeddings.append(image_embeddings.cpu())
+            all_song_embeddings.append(projected_song_embeddings.cpu())
+    
+    # Calculate test metrics
+    avg_test_loss = test_loss / len(test_loader)
+    logger.info(f"Test Loss: {avg_test_loss:.4f}")
+    
+    # Concatenate all embeddings
+    all_image_embeddings = torch.cat(all_image_embeddings, dim=0)
+    all_song_embeddings = torch.cat(all_song_embeddings, dim=0)
+    
+    # Calculate recall metrics
+    recall_metrics = calculate_recall_metrics(all_image_embeddings, all_song_embeddings, ks=[1, 5, 10, 50])
+    
+    # Log test recalls
+    logger.info(f"Test Recalls: R@1: {recall_metrics['r@1_i2s']:.2f}%, "
+              f"R@5: {recall_metrics['r@5_i2s']:.2f}%, "
+              f"R@10: {recall_metrics['r@10_i2s']:.2f}%, "
+              f"R@50: {recall_metrics['r@50_i2s']:.2f}%")
+    
+    # If visualizer is provided, create final visualizations
+    if visualizer is not None:
+        # Embedding space visualization
+        visualizer.visualize_embedding_space(
+            all_image_embeddings, all_song_embeddings,
+            method='both', epoch='final'
+        )
         
-        return model, history
+        # Similarity matrix
+        visualizer.visualize_similarity_matrix(
+            all_image_embeddings, all_song_embeddings,
+            temperature=loss_fn.temperature, epoch='final'
+        )
+        
+        # Detailed recall analysis
+        visualizer.plot_recall_analysis(model, test_loader, device)
+    
+    # Calculate total training time
+    total_time = time.time() - start_time
+    
+    # Update history
+    history['best_epoch'] = best_epoch
+    history['best_recall'] = best_recall
+    history['test_metrics'] = recall_metrics
+    history['total_time'] = total_time
+    
+    # Print training summary
+    logger.info(f"\nTraining Summary:")
+    logger.info(f"Total training time: {total_time:.2f} seconds")
+    logger.info(f"Best Recall@1: {best_recall:.2f}% (achieved on epoch {best_epoch})")
+    
+    return model, history
 
 class WarmupCosineScheduler(_LRScheduler):
     """
@@ -429,228 +484,235 @@ def plot_training_history(history, save_path=None, logger=None):
     logger.info(f"Training history plot saved to {save_path}")
     plt.show()
 
-if __name__ == "__main__":
-    # Parse command line arguments -- DEFAULT ARGUMENTS
-    parser = argparse.ArgumentParser(description='Train contrastive model for image-song matching')
-    parser.add_argument('--backbone', type=str, default='resnet18', 
-                        choices=['resnet18', 'efficientnet_b0', 'convnext_tiny'],
-                        help='Backbone architecture for image encoder')
-    parser.add_argument('--batch_size', type=int, default=64, 
-                        help='Batch size for training')
-    parser.add_argument('--embedding_dim', type=int, default=128, 
-                        help='Dimension of embedding space')
-    parser.add_argument('--lr', type=float, default=3e-4, 
-                        help='Learning rate')
-    parser.add_argument('--weight_decay', type=float, default=1e-4, 
-                        help='Weight decay for optimizer')
-    parser.add_argument('--epochs', type=int, default=300, 
-                        help='Maximum number of epochs')
-    parser.add_argument('--patience', type=int, default=15, 
-                        help='Early stopping patience')
-    parser.add_argument('--temperature', type=float, default=0.05, 
-                        help='Temperature parameter for NT-Xent loss')
-    parser.add_argument('--hard_negative_weight', type=float, default=0.2, 
-                        help='Weight for hard negative mining (0 to disable)')
-    parser.add_argument('--mixup_alpha', type=float, default=0.4, 
-                        help='Alpha parameter for mixup augmentation (0 to disable)')
-    parser.add_argument('--data_path', type=str, default="data/csv files/rawr_dinosaur.csv",
-                        help='Path to the CSV data file')
-    parser.add_argument('--img_folder', type=str, default="data/final-sample-dataset/images",
-                        help='Path to the folder containing images')
-    parser.add_argument('--warmup_epochs', type=int, default=10,
-                        help='Number of epochs for learning rate warmup')
-    parser.add_argument('--min_lr', type=float, default=5e-6,
-                        help='Minimum learning rate after cosine decay')
-    
-    args = parser.parse_args()
-    
-    # Set up logging first
+def main(args):
+    """Main training pipeline with all improvements"""
+    # Set up logging
     logger = setup_logger()
     
     # Set random seeds for reproducibility
-    torch.manual_seed(42)
-    np.random.seed(42)
+    torch.manual_seed(args.seed)
+    np.random.seed(args.seed)
     logger.info("Random seeds set for reproducibility")
-
-    # Parameters from command line
-    batch_size = args.batch_size
-    embedding_dim = args.embedding_dim
-    learning_rate = args.lr
-    weight_decay = args.weight_decay
-    num_epochs = args.epochs
-    patience = args.patience
-    temperature = args.temperature
-    backbone_type = args.backbone
-    hard_negative_weight = args.hard_negative_weight
-    mixup_alpha = args.mixup_alpha
-    warmup_epochs = args.warmup_epochs
-    min_lr = args.min_lr
     
-    # Log parameters
+    # Log training parameters
     logger.info("Training parameters:")
-    logger.info(f"Backbone architecture: {backbone_type}")
-    logger.info(f"Batch size: {batch_size}")
-    logger.info(f"Embedding dimension: {embedding_dim}")
-    logger.info(f"Learning rate: {learning_rate}")
-    logger.info(f"Weight decay: {weight_decay}")
-    logger.info(f"Max epochs: {num_epochs}")
-    logger.info(f"Early stopping patience: {patience}")
-    logger.info(f"NT-Xent temperature: {temperature}")
-    logger.info(f"Hard negative weight: {hard_negative_weight}")
-    logger.info(f"Mixup alpha: {mixup_alpha}")
+    logger.info(f"Backbone architecture: {args.backbone}")
+    logger.info(f"Batch size: {args.batch_size}")
+    logger.info(f"Embedding dimension: {args.embedding_dim}")
+    logger.info(f"Learning rate: {args.lr}")
+    logger.info(f"Weight decay: {args.weight_decay}")
+    logger.info(f"Dropout: {args.dropout}")
+    logger.info(f"Max epochs: {args.epochs}")
+    logger.info(f"Early stopping patience: {args.patience}")
+    logger.info(f"NT-Xent temperature: {args.temperature}")
+    logger.info(f"Hard negative weight: {args.hard_negative_weight}")
+    logger.info(f"Mixup alpha: {args.mixup_alpha}")
+    logger.info(f"Number of views: {args.num_views}")
     
     # Device configuration
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     logger.info(f"Using device: {device}")
     
-    # Define your data paths
-    data_path = args.data_path
-    img_folder = args.img_folder
-    
-    logger.info(f"Data path: {data_path}")
-    logger.info(f"Image folder: {img_folder}")
-    
-    # Create dataset
-    try:
-        dataset = ImgSongDataset(file_path=data_path, img_folder=img_folder)
-        logger.info(f"Dataset successfully loaded with {len(dataset)} samples")
-    except Exception as e:
-        logger.error(f"Failed to load dataset: {str(e)}")
-        raise
-    
-    # Get song embedding dimension from the first item
-    try:
-        _, first_song_features = dataset[0]
-        song_embedding_dim = first_song_features.shape[0]  
-        logger.info(f"Song embedding dimension: {song_embedding_dim}")
-    except Exception as e:
-        logger.error(f"Failed to get song embedding dimension: {str(e)}")
-        raise
-    
-    # Split dataset with larger validation set for small datasets
-    try:
-        train_data, temp_data = train_test_split(dataset, test_size=0.3, random_state=42)
-        val_data, test_data = train_test_split(temp_data, test_size=0.5, random_state=42)
-        
-        logger.info(f"Train set: {len(train_data)} samples")
-        logger.info(f"Validation set: {len(val_data)} samples")
-        logger.info(f"Test set: {len(test_data)} samples")
-    except Exception as e:
-        logger.error(f"Failed to split dataset: {str(e)}")
-        raise
-    
-    # Create data loaders - adjust batch size if dataset is small
-    train_batch_size = min(batch_size, len(train_data))
-    val_batch_size = min(batch_size, len(val_data))
-    test_batch_size = min(batch_size, len(test_data))
-    
-    logger.info(f"Actual batch sizes - Train: {train_batch_size}, Val: {val_batch_size}, Test: {test_batch_size}")
-    
-    try:
-        train_loader = DataLoader(train_data, batch_size=train_batch_size, shuffle=True, num_workers=4)
-        val_loader = DataLoader(val_data, batch_size=val_batch_size, shuffle=False, num_workers=4)
-        test_loader = DataLoader(test_data, batch_size=test_batch_size, shuffle=False, num_workers=4)
-        logger.info("DataLoaders created successfully")
-    except Exception as e:
-        logger.error(f"Failed to create DataLoaders: {str(e)}")
-        raise
-    
-    # Initialize model
-    try:
-        model = ContrastiveImageSongModel(
-            song_embedding_dim=song_embedding_dim, 
-            embedding_dim=embedding_dim,
-            backbone_type=backbone_type
-        )
-        logger.info(f"Model initialized successfully with {backbone_type} backbone")
-    except Exception as e:
-        logger.error(f"Failed to initialize model: {str(e)}")
-        raise
-    
-    # Loss function and optimizer
-    loss_fn = NTXentLoss(temperature=temperature, hard_negative_weight=hard_negative_weight)
-    #optimizer = optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
-    optimizer = optim.AdamW(model.parameters(), lr = args.lr, weight_decay=args.weight_decay)
-    # Learning rate scheduler - cosine annealing with warm restarts works well for small datasets
-    scheduler = WarmupCosineScheduler(
-        optimizer, 
-        warmup_epochs=warmup_epochs,
-        max_epochs=num_epochs,
-        warmup_start_lr=learning_rate/100,
-        base_lr=learning_rate,
-        min_lr=min_lr
+    # Create datasets with multiple views for training
+    train_dataset = ImgSongDataset(
+        file_path=args.data_path,
+        img_folder=args.img_folder,
+        num_views=args.num_views,
+        is_train=True
     )
-
+    logger.info(f"Training dataset loaded with {len(train_dataset)} samples")
+    
+    # Validation and test datasets (single view)
+    val_dataset = ImgSongDataset(
+        file_path=args.data_path,
+        img_folder=args.img_folder,
+        is_train=False
+    )
+    test_dataset = ImgSongDataset(
+        file_path=args.data_path,
+        img_folder=args.img_folder,
+        is_train=False
+    )
+    
+    # Split datasets
+    train_indices, temp_indices = train_test_split(
+        np.arange(len(train_dataset)), 
+        test_size=0.3, 
+        random_state=args.seed
+    )
+    val_indices, test_indices = train_test_split(
+        temp_indices, 
+        test_size=0.5, 
+        random_state=args.seed
+    )
+    
+    # Create subset datasets
+    from torch.utils.data import Subset
+    train_data = Subset(train_dataset, train_indices)
+    val_data = Subset(val_dataset, val_indices)
+    test_data = Subset(test_dataset, test_indices)
+    
+    logger.info(f"Dataset split: Train={len(train_data)}, Val={len(val_data)}, Test={len(test_data)}")
+    
+    # Create data loaders
+    train_loader = DataLoader(
+        train_data, 
+        batch_size=args.batch_size, 
+        shuffle=True, 
+        num_workers=args.num_workers
+    )
+    val_loader = DataLoader(
+        val_data, 
+        batch_size=args.batch_size, 
+        shuffle=False, 
+        num_workers=args.num_workers
+    )
+    test_loader = DataLoader(
+        test_data, 
+        batch_size=args.batch_size, 
+        shuffle=False, 
+        num_workers=args.num_workers
+    )
+    
+    # Get song embedding dimension
+    _, first_song_features = train_dataset[0]
+    if isinstance(first_song_features, list):  # Multiple views case
+        song_embedding_dim = first_song_features[0].shape[0]
+    else:
+        song_embedding_dim = first_song_features.shape[0]
+    
+    logger.info(f"Song embedding dimension: {song_embedding_dim}")
+    
+    # Initialize improved model
+    model = ContrastiveImageSongModel(
+        song_embedding_dim=song_embedding_dim,
+        embedding_dim=args.embedding_dim,
+        backbone_type=args.backbone,
+        dropout=args.dropout
+    )
+    logger.info(f"Model initialized with {args.backbone} backbone")
+    
+    # Enhanced loss function
+    loss_fn = NTXentLoss(
+        temperature=args.temperature,
+        hard_negative_weight=args.hard_negative_weight,
+        use_hard_negatives=args.hard_negative_weight > 0
+    )
+    
+    # Optimizer (AdamW instead of Adam)
+    optimizer = torch.optim.AdamW(
+        model.parameters(),
+        lr=args.lr,
+        weight_decay=args.weight_decay
+    )
+    print(f"Initial learning rate: {optimizer.param_groups[0]['lr']}")  # Add this debug line
+    
+    # Learning rate scheduler with warmup
+    from transformers import get_cosine_schedule_with_warmup
+    
+    # Calculate number of training steps
+    num_training_steps = args.epochs * len(train_loader)
+    warmup_steps = int(num_training_steps * 0.1)  # 10% warmup
+    
+    scheduler = get_cosine_schedule_with_warmup(
+        optimizer,
+        num_warmup_steps=warmup_steps,
+        num_training_steps=num_training_steps
+    )
+    
     logger.info("Optimizer and scheduler initialized")
-    logger.info("Starting training...")
+    
+    # Initialize visualizer
+    visualizer = EnhancedVisualization(save_dir=os.path.join(args.save_dir, 'visualizations'))
+    
+    # Train the model with all enhancements
+    logger.info("Starting enhanced training...")
+    trained_model, history = train_contrastive_model(
+        model=model,
+        train_loader=train_loader,
+        val_loader=val_loader,
+        test_loader=test_loader,
+        optimizer=optimizer,
+        loss_fn=loss_fn,
+        num_epochs=args.epochs,
+        patience=args.patience,
+        device=device,
+        save_dir=args.save_dir,
+        logger=logger,
+        scheduler=scheduler,
+        mixup_alpha=args.mixup_alpha,
+        multiple_views=args.num_views > 1,
+        visualizer=visualizer
+    )
+    
+    # Plot enhanced training history
+    visualizer.plot_training_history(history)
+    
+    # Save final model
+    final_model_path = os.path.join(args.save_dir, f'final_model_{args.backbone}.pth')
+    torch.save({
+        'model_state_dict': trained_model.state_dict(),
+        'embedding_dim': trained_model.embedding_dim,
+        'backbone_type': trained_model.backbone_type,
+        'song_embedding_dim': song_embedding_dim,
+        'history': history
+    }, final_model_path)
+    
+    logger.info(f"Training completed and model saved to {final_model_path}")
+    
+    return trained_model, history
 
-    try:
-        # Train the model
-        trained_model, history = train_contrastive_model(
-            model, train_loader, val_loader, optimizer, loss_fn, 
-            num_epochs=num_epochs, patience=patience, device=device,
-            visualize_every=5, logger=logger, scheduler=scheduler,
-            mixup_alpha=mixup_alpha
-        )
-        
-        # Plot training history
-        plot_training_history(history, save_path='contrastive_training_history.png', logger=logger)
-        
-        # Save the model with backbone information
-        checkpoint = {
-            'model_state_dict': trained_model.state_dict(),
-            'embedding_dim': trained_model.embedding_dim,
-            'backbone_type': backbone_type,
-            'song_embedding_dim': song_embedding_dim
-        }
-        torch.save(checkpoint, f'contrastive_model_{backbone_type}.pth')
-        logger.info(f"Training completed and model saved as contrastive_model_{backbone_type}.pth!")
-        
-    except Exception as e:
-        logger.error(f"Error during training: {str(e)}")
-        logger.exception("Stack trace:")
-        raise
-
-    # Optional: Evaluate on test set
-    logger.info("\nEvaluating on test set...")
-    try:
-        trained_model.eval()
-        test_loss = 0.0
-        total_correct_top5 = 0
-        total_samples = 0
-
-        with torch.no_grad():
-            for images, song_embeddings in test_loader:
-                batch_size = images.size(0)  # Important: get actual batch size here
-                images = images.to(device)
-                song_embeddings = song_embeddings.to(device)
-
-                # Forward pass
-                image_embeddings, projected_song_embeddings = trained_model(images, song_embeddings)
-
-                # Compute loss
-                loss = loss_fn(image_embeddings, projected_song_embeddings)
-                test_loss += loss.item()
-
-                # Compute similarity matrix for the batch
-                similarity = torch.matmul(image_embeddings, projected_song_embeddings.T)
-
-                # Top-5 accuracy computation
-                _, top5_indices = similarity.topk(k=5, dim=1)
-                targets = torch.arange(batch_size).to(device)  # Correct: batch_size here, not global batch_size
-                correct_top5 = (top5_indices == targets.view(-1, 1)).any(dim=1).sum().item()
-
-                total_correct_top5 += correct_top5
-                total_samples += batch_size  # Add actual batch size
-
-        # Calculate average test loss
-        avg_test_loss = test_loss / len(test_loader)
-        logger.info(f"Test Loss: {avg_test_loss:.4f}")
-
-        # Calculate top-5 accuracy
-        accuracy_top5 = total_correct_top5 / total_samples * 100
-        logger.info(f"Top-5 matching accuracy on test set: {accuracy_top5:.2f}%")
-
-    except Exception as e:
-        logger.error(f"Error during testing: {str(e)}")
-        logger.exception("Stack trace:")
+if __name__ == "__main__":
+    import argparse
+    
+    parser = argparse.ArgumentParser(description="Enhanced Contrastive Learning for Image-Song Matching")
+    
+    # Model parameters
+    parser.add_argument('--backbone', type=str, default='efficientnet_b3', 
+                      choices=['efficientnet_b0', 'efficientnet_b3', 'resnet18', 'resnet50'],
+                      help='Backbone architecture for image encoder')
+    parser.add_argument('--embedding_dim', type=int, default=256, 
+                      help='Dimension of embedding space')
+    parser.add_argument('--dropout', type=float, default=0.3,
+                      help='Dropout rate for projection head')
+    
+    # Training parameters
+    parser.add_argument('--batch_size', type=int, default=32, 
+                      help='Batch size for training')
+    parser.add_argument('--lr', type=float, default=1e-4, 
+                      help='Learning rate')
+    parser.add_argument('--weight_decay', type=float, default=0.05, 
+                      help='Weight decay for optimizer')
+    parser.add_argument('--epochs', type=int, default=100, 
+                      help='Maximum number of epochs')
+    parser.add_argument('--patience', type=int, default=20, 
+                      help='Early stopping patience')
+    parser.add_argument('--num_workers', type=int, default=4,
+                      help='Number of workers for data loading')
+    parser.add_argument('--seed', type=int, default=42,
+                      help='Random seed for reproducibility')
+    
+    # Loss function parameters
+    parser.add_argument('--temperature', type=float, default=0.05, 
+                      help='Temperature parameter for NT-Xent loss')
+    parser.add_argument('--hard_negative_weight', type=float, default=0.5, 
+                      help='Weight for hard negative mining (0 to disable)')
+    
+    # Data augmentation parameters
+    parser.add_argument('--mixup_alpha', type=float, default=0.4, 
+                      help='Alpha parameter for mixup augmentation (0 to disable)')
+    parser.add_argument('--num_views', type=int, default=2,
+                      help='Number of views per image for contrastive learning')
+    
+    # Paths
+    parser.add_argument('--data_path', type=str, default="data/csv files/rawr_dinosaur.csv",
+                      help='Path to the CSV data file')
+    parser.add_argument('--img_folder', type=str, default="data/final-sample-dataset/images",
+                      help='Path to the folder containing images')
+    parser.add_argument('--save_dir', type=str, default="checkpoints",
+                      help='Directory to save checkpoints and visualizations')
+    
+    args = parser.parse_args()
+    
+    # Run training pipeline
+    model, history = main(args)

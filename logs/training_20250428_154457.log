@@ -1,0 +1,46 @@
+2025-04-28 15:44:57,461 - contrastive_training - INFO - Random seeds set for reproducibility
+2025-04-28 15:44:57,461 - contrastive_training - INFO - Training parameters:
+2025-04-28 15:44:57,462 - contrastive_training - INFO - Backbone architecture: efficientnet_b0
+2025-04-28 15:44:57,462 - contrastive_training - INFO - Batch size: 24
+2025-04-28 15:44:57,462 - contrastive_training - INFO - Embedding dimension: 128
+2025-04-28 15:44:57,462 - contrastive_training - INFO - Learning rate: 0.0003
+2025-04-28 15:44:57,462 - contrastive_training - INFO - Weight decay: 0.0001
+2025-04-28 15:44:57,462 - contrastive_training - INFO - Max epochs: 300
+2025-04-28 15:44:57,463 - contrastive_training - INFO - Early stopping patience: 15
+2025-04-28 15:44:57,463 - contrastive_training - INFO - NT-Xent temperature: 0.1
+2025-04-28 15:44:57,463 - contrastive_training - INFO - Hard negative weight: 0.1
+2025-04-28 15:44:57,463 - contrastive_training - INFO - Mixup alpha: 0.2
+2025-04-28 15:44:57,491 - contrastive_training - INFO - Using device: cuda
+2025-04-28 15:44:57,491 - contrastive_training - INFO - Data path: data/csv files/rawr_dinosaur.csv
+2025-04-28 15:44:57,491 - contrastive_training - INFO - Image folder: data/final-sample-dataset/images
+2025-04-28 15:44:57,857 - contrastive_training - INFO - Dataset successfully loaded with 1247 samples
+2025-04-28 15:44:57,887 - contrastive_training - INFO - Song embedding dimension: 128
+2025-04-28 15:45:16,656 - contrastive_training - INFO - Train set: 872 samples
+2025-04-28 15:45:16,656 - contrastive_training - INFO - Validation set: 187 samples
+2025-04-28 15:45:16,656 - contrastive_training - INFO - Test set: 188 samples
+2025-04-28 15:45:16,656 - contrastive_training - INFO - Actual batch sizes - Train: 24, Val: 24, Test: 24
+2025-04-28 15:45:16,656 - contrastive_training - INFO - DataLoaders created successfully
+2025-04-28 15:45:16,769 - contrastive_training - INFO - Model initialized successfully with efficientnet_b0 backbone
+2025-04-28 15:45:16,770 - contrastive_training - INFO - Optimizer and scheduler initialized
+2025-04-28 15:45:16,770 - contrastive_training - INFO - Starting training...
+2025-04-28 15:45:16,892 - contrastive_training - INFO - Starting enhanced training on device: cuda
+2025-04-28 15:46:27,859 - contrastive_training - ERROR - Error during training: element 0 of tensors does not require grad and does not have a grad_fn
+2025-04-28 15:46:27,859 - contrastive_training - ERROR - Stack trace:
+Traceback (most recent call last):
+  File "C:\Users\Michael\ig-project\train.py", line 589, in <module>
+    trained_model, history = train_contrastive_model(
+  File "C:\Users\Michael\ig-project\train.py", line 196, in train_contrastive_model
+    loss = loss_fn(image_embeddings, projected_song_embeddings, use_model_temp=True, model_sim=sim_matrix)
+  File "C:\Users\Michael\anaconda3\envs\torch-gpu\lib\site-packages\torch\nn\modules\module.py", line 1736, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "C:\Users\Michael\anaconda3\envs\torch-gpu\lib\site-packages\torch\nn\modules\module.py", line 1747, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "C:\Users\Michael\ig-project\models\decoder\contrastive.py", line 193, in forward
+    image_grad_penalty = self.compute_gradient_penalty(image_embeddings, total_loss)
+  File "C:\Users\Michael\ig-project\models\decoder\contrastive.py", line 124, in compute_gradient_penalty
+    gradients = torch.autograd.grad(
+  File "C:\Users\Michael\anaconda3\envs\torch-gpu\lib\site-packages\torch\autograd\__init__.py", line 496, in grad
+    result = _engine_run_backward(
+  File "C:\Users\Michael\anaconda3\envs\torch-gpu\lib\site-packages\torch\autograd\graph.py", line 825, in _engine_run_backward
+    return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+RuntimeError: element 0 of tensors does not require grad and does not have a grad_fn

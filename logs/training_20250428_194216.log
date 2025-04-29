@@ -1,0 +1,17 @@
+2025-04-28 19:42:16,655 - contrastive_training - INFO - Random seeds set for reproducibility
+2025-04-28 19:42:16,655 - contrastive_training - INFO - Training parameters:
+2025-04-28 19:42:16,655 - contrastive_training - INFO - Backbone architecture: efficientnet_b3
+2025-04-28 19:42:16,655 - contrastive_training - INFO - Batch size: 32
+2025-04-28 19:42:16,655 - contrastive_training - INFO - Embedding dimension: 256
+2025-04-28 19:42:16,655 - contrastive_training - INFO - Learning rate: 0.0001
+2025-04-28 19:42:16,655 - contrastive_training - INFO - Weight decay: 0.05
+2025-04-28 19:42:16,658 - contrastive_training - INFO - Dropout: 0.3
+2025-04-28 19:42:16,660 - contrastive_training - INFO - Max epochs: 100
+2025-04-28 19:42:16,660 - contrastive_training - INFO - Early stopping patience: 20
+2025-04-28 19:42:16,660 - contrastive_training - INFO - NT-Xent temperature: 0.05
+2025-04-28 19:42:16,660 - contrastive_training - INFO - Hard negative weight: 0.5
+2025-04-28 19:42:16,660 - contrastive_training - INFO - Mixup alpha: 0.4
+2025-04-28 19:42:16,660 - contrastive_training - INFO - Number of views: 2
+2025-04-28 19:42:16,688 - contrastive_training - INFO - Using device: cuda
+2025-04-28 19:42:16,723 - contrastive_training - INFO - Training dataset loaded with 1247 samples
+2025-04-28 19:42:16,785 - contrastive_training - INFO - Dataset split: Train=872, Val=187, Test=188

@@ -1,0 +1,31 @@
+2025-04-28 16:40:58,565 - contrastive_training - INFO - Random seeds set for reproducibility
+2025-04-28 16:40:58,565 - contrastive_training - INFO - Training parameters:
+2025-04-28 16:40:58,565 - contrastive_training - INFO - Backbone architecture: efficientnet_b0
+2025-04-28 16:40:58,565 - contrastive_training - INFO - Batch size: 24
+2025-04-28 16:40:58,565 - contrastive_training - INFO - Embedding dimension: 128
+2025-04-28 16:40:58,565 - contrastive_training - INFO - Learning rate: 0.0003
+2025-04-28 16:40:58,565 - contrastive_training - INFO - Weight decay: 0.0001
+2025-04-28 16:40:58,565 - contrastive_training - INFO - Max epochs: 300
+2025-04-28 16:40:58,565 - contrastive_training - INFO - Early stopping patience: 15
+2025-04-28 16:40:58,565 - contrastive_training - INFO - NT-Xent temperature: 0.1
+2025-04-28 16:40:58,566 - contrastive_training - INFO - Hard negative weight: 0.1
+2025-04-28 16:40:58,566 - contrastive_training - INFO - Mixup alpha: 0.2
+2025-04-28 16:40:58,591 - contrastive_training - INFO - Using device: cuda
+2025-04-28 16:40:58,591 - contrastive_training - INFO - Data path: data/csv files/rawr_dinosaur.csv
+2025-04-28 16:40:58,591 - contrastive_training - INFO - Image folder: data/final-sample-dataset/images
+2025-04-28 16:40:58,959 - contrastive_training - INFO - Dataset successfully loaded with 1247 samples
+2025-04-28 16:40:58,980 - contrastive_training - INFO - Song embedding dimension: 128
+2025-04-28 16:41:18,319 - contrastive_training - INFO - Train set: 872 samples
+2025-04-28 16:41:18,319 - contrastive_training - INFO - Validation set: 187 samples
+2025-04-28 16:41:18,319 - contrastive_training - INFO - Test set: 188 samples
+2025-04-28 16:41:18,319 - contrastive_training - INFO - Actual batch sizes - Train: 24, Val: 24, Test: 24
+2025-04-28 16:41:18,319 - contrastive_training - INFO - DataLoaders created successfully
+2025-04-28 16:41:18,404 - contrastive_training - INFO - Model initialized successfully with efficientnet_b0 backbone
+2025-04-28 16:41:18,405 - contrastive_training - INFO - Optimizer and scheduler initialized
+2025-04-28 16:41:18,405 - contrastive_training - INFO - Starting training...
+2025-04-28 16:41:18,538 - contrastive_training - INFO - Starting enhanced training on device: cuda
+2025-04-28 16:42:29,489 - contrastive_training - INFO - Recalls: R@1: 0.00%, R@5: 2.14%, R@10: 4.81%
+2025-04-28 16:42:29,489 - contrastive_training - INFO - Current Learning rate: 0.000033
+2025-04-28 16:42:29,490 - contrastive_training - INFO - Epoch [1/300], Train Loss: 4.4182, Val Loss: 4.3742, Time: 70.95s
+2025-04-28 16:42:29,490 - contrastive_training - INFO - Creating embedding visualizations...
+2025-04-28 16:42:42,329 - contrastive_training - INFO - No improvement for 1 epochs

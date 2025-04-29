@@ -4,153 +4,185 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torchvision.models as models
 import numpy as np
+from efficientnet_pytorch import EfficientNet
 from .img_decoder import ImageEncoder
 
 # Combined model for contrastive learning
 class ContrastiveImageSongModel(nn.Module):
-    def __init__(self, song_embedding_dim, embedding_dim=128, backbone_type='resnet18', projection_dim=512):
+    """
+    Enhanced contrastive learning model with improved architecture.
+    """
+    def __init__(self, song_embedding_dim, embedding_dim=256, backbone_type='efficientnet_b3', dropout=0.3):
+        super().__init__()
+        self.embedding_dim = embedding_dim
+        self.backbone_type = backbone_type
+        
+        # Image encoder backbone
+        if 'efficientnet' in backbone_type:
+            if backbone_type == 'efficientnet_b0':
+                self.image_encoder = EfficientNet.from_pretrained('efficientnet-b0')
+                in_features = 1280
+            elif backbone_type == 'efficientnet_b3':
+                self.image_encoder = EfficientNet.from_pretrained('efficientnet-b3')
+                in_features = 1536
+        elif 'resnet' in backbone_type:
+            if backbone_type == 'resnet50':
+                self.image_encoder = models.resnet50(pretrained=True)
+                in_features = 2048
+            else:
+                self.image_encoder = models.resnet18(pretrained=True)
+                in_features = 512
+        else:
+            # Default to EfficientNet B0
+            self.image_encoder = EfficientNet.from_pretrained('efficientnet-b0')
+            in_features = 1280
+        
+        # Non-linear projection head for images (MLP with BN and ReLU)
+        self.image_projector = nn.Sequential(
+            nn.Linear(in_features, embedding_dim * 2),
+            nn.BatchNorm1d(embedding_dim * 2),
+            nn.ReLU(inplace=True),
+            nn.Dropout(dropout),
+            nn.Linear(embedding_dim * 2, embedding_dim),
+            nn.BatchNorm1d(embedding_dim)
+        )
+        
+        # Song projector (MLP with BN and ReLU)
+        self.song_projector = nn.Sequential(
+            nn.Linear(song_embedding_dim, embedding_dim * 2),
+            nn.BatchNorm1d(embedding_dim * 2),
+            nn.ReLU(inplace=True),
+            nn.Dropout(dropout),
+            nn.Linear(embedding_dim * 2, embedding_dim),
+            nn.BatchNorm1d(embedding_dim)
+        )
+    
+    def forward(self, images, song_embeddings=None, image_only=False, song_only=False):
         """
-        Enhanced contrastive model with additional regularization and more expressive projections
+        Forward pass through the model
         
         Args:
-            song_embedding_dim: Dimension of the input song embeddings
-            embedding_dim: Dimension of the shared embedding space
-            backbone_type: Type of image encoder backbone
-            projection_dim: Intermediate projection dimension
+            images: Image tensors or None if song_only=True
+            song_embeddings: Song feature tensors or None if image_only=True
+            image_only: If True, only process images
+            song_only: If True, only process songs
+        
+        Returns:
+            Tuple of normalized embeddings depending on inputs
         """
-        super(ContrastiveImageSongModel, self).__init__()
+        image_embeddings = None
+        projected_song_embeddings = None
         
-        # Use the modified ImageEncoder with selected backbone
-        self.image_encoder = ImageEncoder(embedding_dim=embedding_dim, backbone_type=backbone_type)
+        # Process images if provided or if image_only mode
+        if images is not None or image_only:
+            if song_only:
+                # Skip image processing in song_only mode
+                pass
+            else:
+                # Extract image features
+                if 'efficientnet' in self.backbone_type:
+                    image_features = self.image_encoder.extract_features(images)
+                    image_features = F.adaptive_avg_pool2d(image_features, (1, 1))
+                    image_features = torch.flatten(image_features, 1)
+                else:  # ResNet
+                    image_features = self.image_encoder.conv1(images)
+                    image_features = self.image_encoder.bn1(image_features)
+                    image_features = self.image_encoder.relu(image_features)
+                    image_features = self.image_encoder.maxpool(image_features)
+                    
+                    image_features = self.image_encoder.layer1(image_features)
+                    image_features = self.image_encoder.layer2(image_features)
+                    image_features = self.image_encoder.layer3(image_features)
+                    image_features = self.image_encoder.layer4(image_features)
+                    
+                    image_features = self.image_encoder.avgpool(image_features)
+                    image_features = torch.flatten(image_features, 1)
+                
+                # Project image features
+                image_embeddings = self.image_projector(image_features)
+                
+                # Normalize embeddings to lie on unit hypersphere
+                image_embeddings = F.normalize(image_embeddings, p=2, dim=1)
         
-        # More expressive song projection 
-        self.song_projection = nn.Sequential(
-            nn.Linear(song_embedding_dim, projection_dim),
-            nn.LayerNorm(projection_dim),  # LayerNorm works better than GroupNorm for small batches
-            nn.GELU(),
-            nn.Dropout(p=0.5),
-            nn.Linear(projection_dim, projection_dim // 2),
-            nn.LayerNorm(projection_dim // 2),
-            nn.GELU(),
-            nn.Dropout(p=0.3),
-            nn.Linear(projection_dim // 2, embedding_dim)
-        )
-
-        # Add similarity scaling parameter (learnable temperature)
-        self.logit_scale = nn.Parameter(torch.ones([]) * np.log(1 / 0.07))
+        # Process song embeddings if provided or if song_only mode
+        if song_embeddings is not None or song_only:
+            if image_only:
+                # Skip song processing in image_only mode
+                pass
+            else:
+                projected_song_embeddings = self.song_projector(song_embeddings)
+                projected_song_embeddings = F.normalize(projected_song_embeddings, p=2, dim=1)
         
-        self._initialize_weights()
-        self.embedding_dim = embedding_dim
-        
-    def _initialize_weights(self):
-        """Better weight initialization for deep projections"""
-        for m in self.song_projection.modules():
-            if isinstance(m, nn.Linear):
-                # Use better initialization for GELU
-                nn.init.xavier_uniform_(m.weight)
-                if m.bias is not None:
-                    nn.init.constant_(m.bias, 0)
-        
-    def forward(self, images=None, song_features=None, song_only=False, image_only=False):
-        """Forward pass with automatic scaling of similarities"""
-        if song_only and song_features is not None:
-            song_embedding = self.song_projection(song_features)
-            song_embedding = F.normalize(song_embedding, p=2, dim=1)
-            return None, song_embedding
-            
-        if image_only and images is not None:
-            image_embedding = self.image_encoder(images)
-            image_embedding = F.normalize(image_embedding, p=2, dim=1)
-            return image_embedding, None
-        
-        # Process both modalities
-        image_embedding = self.image_encoder(images)
-        song_embedding = self.song_projection(song_features)
-        
-        # Normalize embeddings
-        image_embedding = F.normalize(image_embedding, p=2, dim=1)
-        song_embedding = F.normalize(song_embedding, p=2, dim=1)
-        
-        return image_embedding, song_embedding
+        # Return based on mode but always maintain compatibility with expected interfaces
+        if image_only:
+            return image_embeddings, None
+        elif song_only:
+            return None, projected_song_embeddings
+        else:
+            return image_embeddings, projected_song_embeddings
     
-    def similarity(self, image_embeddings, song_embeddings):
-        """Get scaled cosine similarity with learned temperature"""
-        # Clamp for stability
-        scale = torch.clamp(self.logit_scale.exp(), min=1.0, max=100.0)
-        return scale * torch.matmul(image_embeddings, song_embeddings.T)
-
+    def similarity(self, image_embeddings, song_embeddings, temperature=0.05):
+        """Compute similarity matrix with temperature scaling"""
+        return torch.matmul(image_embeddings, song_embeddings.T) / temperature
 
 
 # Improved NTXentLoss with hard negative mining for smaller datasets
 class NTXentLoss(nn.Module):
-    def __init__(self, temperature=0.1, hard_negative_weight=0.3, hardest_only=False):
-        """        
-        Args:
-            temperature: Temperature parameter (not used if model has learned scaling)
-            hard_negative_weight: Weight for hard negatives mining
-            hardest_only: If True, only consider the hardest negative
-        """
-        super(NTXentLoss, self).__init__()
+    """
+    NT-Xent loss with temperature scaling and hard negative mining.
+    """
+    def __init__(self, temperature=0.05, hard_negative_weight=0.5, use_hard_negatives=True):
+        super().__init__()
         self.temperature = temperature
         self.hard_negative_weight = hard_negative_weight
-        self.hardest_only = hardest_only
-        self.criterion = nn.CrossEntropyLoss()
-        self.margin = 0.3  
+        self.use_hard_negatives = use_hard_negatives
+        self.criterion = nn.CrossEntropyLoss(reduction="sum")
         
-    def forward(self, image_embeddings, song_embeddings, use_model_temp=True, model_sim=None):
-        batch_size = image_embeddings.size(0)
+    def forward(self, image_embeddings, song_embeddings, temperature=None):
+        # Use provided temperature or default
+        temp = temperature if temperature is not None else self.temperature
         
-        # Use provided similarity or compute it
-        if model_sim is not None:
-            similarity_matrix = model_sim
+        # Compute similarity matrix
+        sim_matrix = torch.matmul(image_embeddings, song_embeddings.T) / temp
+        
+        # Get batch size
+        batch_size = image_embeddings.shape[0]
+        
+        # Labels are the diagonal indices (matched pairs)
+        labels = torch.arange(batch_size, device=image_embeddings.device)
+        
+        # If using hard negatives, modify the similarity matrix
+        if self.use_hard_negatives and self.hard_negative_weight > 0:
+            # Get hardest negative for each sample (highest non-diagonal value)
+            with torch.no_grad():
+                # Create mask to ignore diagonal (positive) pairs
+                mask = torch.eye(batch_size, device=image_embeddings.device) == 0
+                
+                # Get hardest negatives
+                hardest_negatives_i2s = (sim_matrix * mask).max(dim=1)[1]
+                hardest_negatives_s2i = (sim_matrix.t() * mask).max(dim=1)[1]
+                
+            # Blend in hard negatives with regular similarity matrix
+            sim_matrix_with_hard_i2s = sim_matrix.clone()
+            sim_matrix_with_hard_s2i = sim_matrix.t().clone()
+            
+            # Increase the similarity of hard negatives
+            for i in range(batch_size):
+                hn_idx = hardest_negatives_i2s[i]
+                sim_matrix_with_hard_i2s[i, hn_idx] = sim_matrix[i, hn_idx] * (1 + self.hard_negative_weight)
+                
+                hn_idx = hardest_negatives_s2i[i]
+                sim_matrix_with_hard_s2i[i, hn_idx] = sim_matrix.t()[i, hn_idx] * (1 + self.hard_negative_weight)
+                
+            # Compute losses with hard negatives
+            loss_i2s = self.criterion(sim_matrix_with_hard_i2s, labels) / batch_size
+            loss_s2i = self.criterion(sim_matrix_with_hard_s2i, labels) / batch_size
         else:
-            similarity_matrix = torch.matmul(image_embeddings, song_embeddings.T)
-            if not use_model_temp:
-                similarity_matrix = similarity_matrix / self.temperature
+            # Standard contrastive loss
+            loss_i2s = self.criterion(sim_matrix, labels) / batch_size
+            loss_s2i = self.criterion(sim_matrix.t(), labels) / batch_size
         
-        # For InfoNCE loss, the positive samples are the diagonal elements
-        labels = torch.arange(batch_size).to(similarity_matrix.device)
-        
-        # Get positive pair similarities (diagonal)
-        pos_sim = torch.diag(similarity_matrix)
-        
-        if self.hard_negative_weight > 0:
-            similarity_matrix_detached = similarity_matrix.detach().clone()
-            
-            # Create mask for positives
-            mask = torch.eye(batch_size, dtype=torch.bool, device=similarity_matrix_detached.device)
-            similarity_matrix_detached.masked_fill_(mask, float('-inf'))
-            
-            # Find hard negatives (highest similarity incorrect matches)
-            hard_negatives_values, hard_negatives = torch.topk(similarity_matrix_detached, 
-                                                              k=2 if not self.hardest_only else 1, 
-                                                              dim=1)
-            
-            # Create boosted similarity matrix
-            boosted_sim = similarity_matrix.clone()
-            
-            # Apply weighting to the hardest negatives
-            for i in range(boosted_sim.shape[0]):
-                for j, neg_idx in enumerate(hard_negatives[i]):
-                    # Weight decreases as we move from hardest to less hard
-                    weight = self.hard_negative_weight / (j + 1) if not self.hardest_only else self.hard_negative_weight
-                    boosted_sim[i, neg_idx] *= (1 + weight)
-            
-            # Standard InfoNCE losses with hard negatives
-            loss_i2s = self.criterion(boosted_sim, labels)
-            loss_s2i = self.criterion(boosted_sim.T, labels)
-            
-            # Add margin-based contrastive component for most difficult negatives
-            neg_sim = hard_negatives_values[:, 0]  
-            margin_loss = torch.mean(torch.clamp(neg_sim - pos_sim + self.margin, min=0))
-            
-            # Combined loss
-            total_loss = (loss_i2s + loss_s2i) / 2 + 0.3 * margin_loss
-            
-        else:
-            # Standard NT-Xent loss 
-            loss_i2s = self.criterion(similarity_matrix, labels)
-            loss_s2i = self.criterion(similarity_matrix.T, labels)
-            total_loss = (loss_i2s + loss_s2i) / 2
+        # Average both directions
+        total_loss = (loss_i2s + loss_s2i) / 2
         
         return total_loss

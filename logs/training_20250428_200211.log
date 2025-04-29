@@ -1,0 +1,74 @@
+2025-04-28 20:02:11,728 - contrastive_training - INFO - Random seeds set for reproducibility
+2025-04-28 20:02:11,728 - contrastive_training - INFO - Training parameters:
+2025-04-28 20:02:11,729 - contrastive_training - INFO - Backbone architecture: efficientnet_b0
+2025-04-28 20:02:11,729 - contrastive_training - INFO - Batch size: 24
+2025-04-28 20:02:11,729 - contrastive_training - INFO - Embedding dimension: 128
+2025-04-28 20:02:11,729 - contrastive_training - INFO - Learning rate: 0.0001
+2025-04-28 20:02:11,729 - contrastive_training - INFO - Weight decay: 0.05
+2025-04-28 20:02:11,729 - contrastive_training - INFO - Dropout: 0.3
+2025-04-28 20:02:11,729 - contrastive_training - INFO - Max epochs: 100
+2025-04-28 20:02:11,730 - contrastive_training - INFO - Early stopping patience: 20
+2025-04-28 20:02:11,730 - contrastive_training - INFO - NT-Xent temperature: 0.05
+2025-04-28 20:02:11,730 - contrastive_training - INFO - Hard negative weight: 0.5
+2025-04-28 20:02:11,730 - contrastive_training - INFO - Mixup alpha: 0.4
+2025-04-28 20:02:11,730 - contrastive_training - INFO - Number of views: 2
+2025-04-28 20:02:11,751 - contrastive_training - INFO - Using device: cuda
+2025-04-28 20:02:12,113 - contrastive_training - INFO - Training dataset loaded with 1247 samples
+2025-04-28 20:02:12,840 - contrastive_training - INFO - Dataset split: Train=872, Val=187, Test=188
+2025-04-28 20:02:12,871 - contrastive_training - INFO - Song embedding dimension: 128
+2025-04-28 20:02:13,923 - contrastive_training - INFO - Model initialized with efficientnet_b0 backbone
+2025-04-28 20:02:14,314 - contrastive_training - INFO - Optimizer and scheduler initialized
+2025-04-28 20:02:14,315 - contrastive_training - INFO - Starting enhanced training...
+2025-04-28 20:02:14,432 - contrastive_training - INFO - Starting enhanced training with multiple views on device: cuda
+2025-04-28 20:03:28,645 - contrastive_training - INFO - Recalls: R@1: 0.00%, R@5: 2.14%, R@10: 3.74%
+2025-04-28 20:03:42,748 - contrastive_training - INFO - Current Learning rate: 0.000000
+2025-04-28 20:03:42,748 - contrastive_training - INFO - Epoch [1/100], Train Loss: 5.4910, Val Loss: 5.3449, Time: 88.32s
+2025-04-28 20:03:42,749 - contrastive_training - INFO - No improvement for 1 epochs
+2025-04-28 20:04:55,975 - contrastive_training - INFO - Recalls: R@1: 0.53%, R@5: 2.14%, R@10: 4.28%
+2025-04-28 20:04:55,975 - contrastive_training - INFO - Current Learning rate: 0.000001
+2025-04-28 20:04:55,976 - contrastive_training - INFO - Epoch [2/100], Train Loss: 5.5808, Val Loss: 5.3418, Time: 73.23s
+2025-04-28 20:04:55,977 - contrastive_training - INFO - Recall@1 improved to 0.53%
+2025-04-28 20:06:09,378 - contrastive_training - INFO - Recalls: R@1: 0.53%, R@5: 3.21%, R@10: 7.49%
+2025-04-28 20:06:09,378 - contrastive_training - INFO - Current Learning rate: 0.000001
+2025-04-28 20:06:09,378 - contrastive_training - INFO - Epoch [3/100], Train Loss: 5.5844, Val Loss: 5.3300, Time: 73.35s
+2025-04-28 20:06:09,378 - contrastive_training - INFO - No improvement for 1 epochs
+2025-04-28 20:07:22,508 - contrastive_training - INFO - Recalls: R@1: 0.53%, R@5: 3.74%, R@10: 8.02%
+2025-04-28 20:07:22,508 - contrastive_training - INFO - Current Learning rate: 0.000001
+2025-04-28 20:07:22,508 - contrastive_training - INFO - Epoch [4/100], Train Loss: 5.4807, Val Loss: 5.3262, Time: 73.13s
+2025-04-28 20:07:22,508 - contrastive_training - INFO - No improvement for 2 epochs
+2025-04-28 20:08:36,023 - contrastive_training - INFO - Recalls: R@1: 0.53%, R@5: 2.14%, R@10: 5.35%
+2025-04-28 20:08:36,023 - contrastive_training - INFO - Current Learning rate: 0.000001
+2025-04-28 20:08:36,023 - contrastive_training - INFO - Epoch [5/100], Train Loss: 5.4100, Val Loss: 5.3733, Time: 73.52s
+2025-04-28 20:08:36,023 - contrastive_training - INFO - No improvement for 3 epochs
+2025-04-28 20:09:50,006 - contrastive_training - INFO - Recalls: R@1: 0.53%, R@5: 3.21%, R@10: 8.02%
+2025-04-28 20:09:54,499 - contrastive_training - INFO - Current Learning rate: 0.000002
+2025-04-28 20:09:54,499 - contrastive_training - INFO - Epoch [6/100], Train Loss: 5.6323, Val Loss: 5.3614, Time: 78.48s
+2025-04-28 20:09:54,499 - contrastive_training - INFO - No improvement for 4 epochs
+2025-04-28 20:11:08,307 - contrastive_training - INFO - Recalls: R@1: 0.53%, R@5: 1.60%, R@10: 6.42%
+2025-04-28 20:11:08,307 - contrastive_training - INFO - Current Learning rate: 0.000002
+2025-04-28 20:11:08,308 - contrastive_training - INFO - Epoch [7/100], Train Loss: 5.5456, Val Loss: 5.3030, Time: 73.81s
+2025-04-28 20:11:08,308 - contrastive_training - INFO - No improvement for 5 epochs
+2025-04-28 20:12:22,179 - contrastive_training - INFO - Recalls: R@1: 0.53%, R@5: 1.60%, R@10: 5.88%
+2025-04-28 20:12:22,180 - contrastive_training - INFO - Current Learning rate: 0.000002
+2025-04-28 20:12:22,180 - contrastive_training - INFO - Epoch [8/100], Train Loss: 5.5148, Val Loss: 5.2865, Time: 73.87s
+2025-04-28 20:12:22,180 - contrastive_training - INFO - No improvement for 6 epochs
+2025-04-28 20:13:36,118 - contrastive_training - INFO - Recalls: R@1: 0.53%, R@5: 2.67%, R@10: 6.95%
+2025-04-28 20:13:36,118 - contrastive_training - INFO - Current Learning rate: 0.000002
+2025-04-28 20:13:36,118 - contrastive_training - INFO - Epoch [9/100], Train Loss: 5.5315, Val Loss: 5.3152, Time: 73.94s
+2025-04-28 20:13:36,119 - contrastive_training - INFO - No improvement for 7 epochs
+2025-04-28 20:14:49,635 - contrastive_training - INFO - Recalls: R@1: 0.53%, R@5: 1.60%, R@10: 8.02%
+2025-04-28 20:14:49,635 - contrastive_training - INFO - Current Learning rate: 0.000003
+2025-04-28 20:14:49,635 - contrastive_training - INFO - Epoch [10/100], Train Loss: 5.5563, Val Loss: 5.3268, Time: 73.52s
+2025-04-28 20:14:49,635 - contrastive_training - INFO - No improvement for 8 epochs
+2025-04-28 20:16:06,150 - contrastive_training - INFO - Recalls: R@1: 0.53%, R@5: 2.14%, R@10: 6.95%
+2025-04-28 20:16:10,692 - contrastive_training - INFO - Current Learning rate: 0.000003
+2025-04-28 20:16:10,692 - contrastive_training - INFO - Epoch [11/100], Train Loss: 5.4394, Val Loss: 5.2963, Time: 81.06s
+2025-04-28 20:16:10,692 - contrastive_training - INFO - No improvement for 9 epochs
+2025-04-28 20:17:23,174 - contrastive_training - INFO - Recalls: R@1: 0.53%, R@5: 2.67%, R@10: 6.42%
+2025-04-28 20:17:23,174 - contrastive_training - INFO - Current Learning rate: 0.000003
+2025-04-28 20:17:23,174 - contrastive_training - INFO - Epoch [12/100], Train Loss: 5.3869, Val Loss: 5.2710, Time: 72.48s
+2025-04-28 20:17:23,174 - contrastive_training - INFO - No improvement for 10 epochs
+2025-04-28 20:18:36,119 - contrastive_training - INFO - Recalls: R@1: 0.53%, R@5: 3.21%, R@10: 6.95%
+2025-04-28 20:18:36,120 - contrastive_training - INFO - Current Learning rate: 0.000004
+2025-04-28 20:18:36,120 - contrastive_training - INFO - Epoch [13/100], Train Loss: 5.5031, Val Loss: 5.2938, Time: 72.95s
+2025-04-28 20:18:36,120 - contrastive_training - INFO - No improvement for 11 epochs
