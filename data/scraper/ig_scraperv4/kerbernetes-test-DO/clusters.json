@@ -1,0 +1,10 @@
+{"id": "9aaa3d95-0c19-433f-be5f-4c6ce969402a", "region": "nyc1", "version": "1.32.2-do.0", "size": "s-2vcpu-4gb", "created": "2025-05-08T05:20:37.418470Z"}
+{"id": "4ab7ce05-dab1-48dd-9a16-5ec70fa2ec9f", "region": "nyc2", "version": "1.32.2-do.0", "size": "s-2vcpu-4gb", "created": "2025-05-08T05:20:37.425079Z"}
+{"id": "5f47ec08-eefb-4100-9f05-9c0aa69270ff", "region": "blr1", "version": "1.32.2-do.0", "size": "s-2vcpu-4gb", "created": "2025-05-08T05:20:37.432804Z"}
+{"id": "4b9e19c4-bea5-4a07-8aa4-04bbdaedca78", "region": "sgp1", "version": "1.32.2-do.0", "size": "s-2vcpu-4gb", "created": "2025-05-08T05:20:37.435847Z"}
+{"id": "d7b01077-fc6b-437a-8e3a-381b6ff039ae", "region": "sfo2", "version": "1.32.2-do.0", "size": "s-2vcpu-4gb", "created": "2025-05-08T05:20:37.465015Z"}
+{"id": "1fe83633-d545-4763-84ed-dd19c9c864c2", "region": "lon1", "version": "1.32.2-do.0", "size": "s-2vcpu-4gb", "created": "2025-05-08T05:20:37.525973Z"}
+{"id": "c4ae1362-830d-4df2-8d66-c0ae39b92072", "region": "sfo3", "version": "1.32.2-do.0", "size": "s-2vcpu-4gb", "created": "2025-05-08T05:20:37.531957Z"}
+{"id": "03eaaaed-1a9f-4312-be9a-b3c4ffbe1397", "region": "nyc3", "version": "1.32.2-do.0", "size": "s-2vcpu-4gb", "created": "2025-05-08T05:20:37.569363Z"}
+{"id": "6520efba-8e87-4658-8b28-7cb6b9cfc58b", "region": "syd1", "version": "1.32.2-do.0", "size": "s-2vcpu-4gb", "created": "2025-05-08T05:20:37.605567Z"}
+{"id": "db0376df-4237-4ea8-ad6f-d07e50b69954", "region": "fra1", "version": "1.32.2-do.0", "size": "s-2vcpu-4gb", "created": "2025-05-08T05:20:37.623874Z"}

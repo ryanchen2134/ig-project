@@ -1,0 +1,3 @@
+pip install python-dotenv paramiko
+mkdir -p ~/.ssh
+ssh-keygen -t ed25519 -f ~/.ssh/dovpn_key -N ""   # if you don’t have a key already

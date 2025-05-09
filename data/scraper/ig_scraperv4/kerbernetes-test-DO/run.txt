@@ -1,0 +1,5 @@
+"""
+Requirements:
+  pip install python-dotenv requests kubernetes
+  doctl auth init  # or set PAT and call DigitalOcean API directly
+"""

@@ -1,0 +1,188 @@
+{
+  "options": {
+    "regions": [
+      {
+        "name": "New York 1",
+        "slug": "nyc1"
+      },
+      {
+        "name": "New York 2",
+        "slug": "nyc2"
+      },
+      {
+        "name": "Singapore 1",
+        "slug": "sgp1"
+      },
+      {
+        "name": "London 1",
+        "slug": "lon1"
+      },
+      {
+        "name": "New York 3",
+        "slug": "nyc3"
+      },
+      {
+        "name": "Amsterdam 3",
+        "slug": "ams3"
+      },
+      {
+        "name": "Frankfurt 1",
+        "slug": "fra1"
+      },
+      {
+        "name": "Toronto 1",
+        "slug": "tor1"
+      },
+      {
+        "name": "San Francisco 2",
+        "slug": "sfo2"
+      },
+      {
+        "name": "Bangalore 1",
+        "slug": "blr1"
+      },
+      {
+        "name": "San Francisco 3",
+        "slug": "sfo3"
+      },
+      {
+        "name": "Sydney 1",
+        "slug": "syd1"
+      }
+    ],
+    "versions": [
+      {
+        "slug": "1.32.2-do.0",
+        "kubernetes_version": "1.32.2",
+        "supported_features": [
+          "cluster-autoscaler",
+          "docr-integration",
+          "ha-control-plane",
+          "token-authentication"
+        ]
+      },
+      {
+        "slug": "1.31.6-do.0",
+        "kubernetes_version": "1.31.6",
+        "supported_features": [
+          "cluster-autoscaler",
+          "docr-integration",
+          "ha-control-plane",
+          "token-authentication"
+        ]
+      },
+      {
+        "slug": "1.30.10-do.0",
+        "kubernetes_version": "1.30.10",
+        "supported_features": [
+          "cluster-autoscaler",
+          "docr-integration",
+          "ha-control-plane",
+          "token-authentication"
+        ]
+      }
+    ],
+    "sizes": [
+      {
+        "name": "s-1vcpu-2gb",
+        "slug": "s-1vcpu-2gb"
+      },
+      {
+        "name": "s-1vcpu-2gb-amd",
+        "slug": "s-1vcpu-2gb-amd"
+      },
+      {
+        "name": "s-1vcpu-2gb-intel",
+        "slug": "s-1vcpu-2gb-intel"
+      },
+      {
+        "name": "s-1vcpu-2gb-70gb-intel",
+        "slug": "s-1vcpu-2gb-70gb-intel"
+      },
+      {
+        "name": "s-2vcpu-2gb",
+        "slug": "s-2vcpu-2gb"
+      },
+      {
+        "name": "s-2vcpu-2gb-amd",
+        "slug": "s-2vcpu-2gb-amd"
+      },
+      {
+        "name": "s-2vcpu-2gb-intel",
+        "slug": "s-2vcpu-2gb-intel"
+      },
+      {
+        "name": "s-2vcpu-2gb-90gb-intel",
+        "slug": "s-2vcpu-2gb-90gb-intel"
+      },
+      {
+        "name": "s-2vcpu-4gb",
+        "slug": "s-2vcpu-4gb"
+      },
+      {
+        "name": "s-2vcpu-4gb-amd",
+        "slug": "s-2vcpu-4gb-amd"
+      },
+      {
+        "name": "s-2vcpu-4gb-intel",
+        "slug": "s-2vcpu-4gb-intel"
+      },
+      {
+        "name": "s-2vcpu-4gb-120gb-intel",
+        "slug": "s-2vcpu-4gb-120gb-intel"
+      },
+      {
+        "name": "s-2vcpu-8gb-amd",
+        "slug": "s-2vcpu-8gb-amd"
+      },
+      {
+        "name": "c-2-4GiB",
+        "slug": "c-2"
+      },
+      {
+        "name": "s-2vcpu-8gb-160gb-intel",
+        "slug": "s-2vcpu-8gb-160gb-intel"
+      },
+      {
+        "name": "s-4vcpu-8gb",
+        "slug": "s-4vcpu-8gb"
+      },
+      {
+        "name": "s-4vcpu-8gb-amd",
+        "slug": "s-4vcpu-8gb-amd"
+      },
+      {
+        "name": "s-4vcpu-8gb-intel",
+        "slug": "s-4vcpu-8gb-intel"
+      },
+      {
+        "name": "g-2vcpu-8gb",
+        "slug": "g-2vcpu-8gb"
+      },
+      {
+        "name": "s-4vcpu-8gb-240gb-intel",
+        "slug": "s-4vcpu-8gb-240gb-intel"
+      },
+      {
+        "name": "gd-2vcpu-8gb",
+        "slug": "gd-2vcpu-8gb"
+      },
+      {
+        "name": "s-4vcpu-16gb-amd",
+        "slug": "s-4vcpu-16gb-amd"
+      },
+      {
+        "name": "m-2vcpu-16gb",
+        "slug": "m-2vcpu-16gb"
+      },
+      {
+        "name": "c-4-8GiB",
+        "slug": "c-4"
+      }
+    ],
+    "team_limits": {
+      "gpu_limit": 0,
+      "gpu_count": 0
+    }
+  }
+}
