@@ -30,7 +30,7 @@ def test_with_sample_data(model_path, original_csv_path, test_image_path, device
         model_state = checkpoint['model_state_dict']
         embedding_dim = checkpoint.get('embedding_dim', 64)
         backbone_type = checkpoint.get('backbone_type', 'resnet18')
-        song_embedding_dim = checkpoint.get('song_embedding_dim', 6144)  # Default if not specified
+        song_embedding_dim = checkpoint.get('song_embedding_dim', 64)  # Default if not specified
         
         print(f"Model info - Backbone: {backbone_type}, Embedding dim: {embedding_dim}, Song embedding dim: {song_embedding_dim}")
     else:
@@ -98,15 +98,21 @@ def test_with_sample_data(model_path, original_csv_path, test_image_path, device
             model=model,
             image_path=test_image_path,
             song_database=song_db,
-            top_k=5,  # Show top 5 matches
+            top_k=None,  # Show top 5 matches
             device=device
         )
         
         # Print results
-        print("\nTop matching songs:")
-        for i, song in enumerate(results):
-            print(f"{i+1}. {song['title']} by {song['artist']} (similarity: {song['similarity']:.4f})")
-            
+        # print("\nTop matching songs:")
+        # for i, song in enumerate(results):
+        #     print(f"{i+1}. {song['title']} by {song['artist']} (similarity: {song['similarity']:.4f})")
+
+        print("\n=== Similarity scores for the whole database ===")
+        for rank, song in enumerate(results, 1):
+            print(f"{rank:4d}. {song['title']} by {song['artist']:<25}"
+                f"  score = {song['similarity']:.4f}")
+        print(f"\nTotal entries: {len(results)}")
+
         print("\nRetrieval test completed successfully!")
         
     except Exception as e:

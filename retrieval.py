@@ -154,6 +154,7 @@ def retrieve_songs_for_image(model, image_path, song_database, top_k=5, device='
     
     # Compute similarities with all songs
     song_embeddings = song_database['embeddings'].to(device)
+    
     similarities = torch.mm(image_embedding, song_embeddings.t()).squeeze()
     
     # Get top-k songs

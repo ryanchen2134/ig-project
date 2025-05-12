@@ -43,21 +43,40 @@ class ImageEncoder(nn.Module):
         else:
             raise ValueError(f"Unsupported backbone type: {backbone_type}")
         
-        # Projection Layer with Bottleneck - helps avoid overfitting
-        self.projection = nn.Sequential(
+        # Freeze backbone parameters
+        for param in self.backbone.parameters():
+            param.requires_grad = False
+        
+        # LOCKED
+        self.pool = nn.Sequential(
             nn.AdaptiveAvgPool2d(1),
-            nn.Flatten(),
-            nn.Linear(self.feature_dim, 256),
-            nn.GroupNorm(num_groups=8, num_channels=256),  # GroupNorm instead of BatchNorm
-            nn.GELU(),
-            nn.Dropout(p=0.5),
-            nn.Linear(256, embedding_dim)
+            nn.Flatten()
         )
-
+        
+        # UNLOCKED
+        self.projection1 = nn.Linear(512, embedding_dim)  # First UNLOCKED layer
+        
+        # Nonlinear transformation
+        self.nonlinear = nn.Sequential(
+            nn.GELU(),
+            nn.Dropout(0.3)
+        )
+        
+        # Second UNLOCKED layer
+        self.projection2 = nn.Linear(embedding_dim, embedding_dim)
+        
     def forward(self, x):
-        features = self.backbone(x)
-        embedding = self.projection(features)
-        # Normalize embeddings to lie on unit hypersphere
+        # Locked layers (no gradient computation needed)
+        with torch.no_grad():
+            features = self.backbone(x)
+        pooled = self.pool(features)
+        
+        # Unlocked projections
+        embedding = self.projection1(pooled)
+        embedding = self.nonlinear(embedding)
+        embedding = self.projection2(embedding)
+        
+        # Normalize
         return F.normalize(embedding, p=2, dim=1)
 
 

@@ -1,0 +1,110 @@
+2025-05-11 20:23:22,480 - contrastive_training - INFO - Random seeds set for reproducibility
+2025-05-11 20:23:22,480 - contrastive_training - INFO - Training parameters:
+2025-05-11 20:23:22,481 - contrastive_training - INFO - Backbone architecture: resnet18
+2025-05-11 20:23:22,481 - contrastive_training - INFO - Batch size: 16
+2025-05-11 20:23:22,481 - contrastive_training - INFO - Embedding dimension: 128
+2025-05-11 20:23:22,481 - contrastive_training - INFO - Learning rate: 0.0001
+2025-05-11 20:23:22,481 - contrastive_training - INFO - Weight decay: 0.0001
+2025-05-11 20:23:22,481 - contrastive_training - INFO - Max epochs: 75
+2025-05-11 20:23:22,481 - contrastive_training - INFO - Early stopping patience: 10
+2025-05-11 20:23:22,481 - contrastive_training - INFO - NT-Xent temperature: 0.05
+2025-05-11 20:23:22,481 - contrastive_training - INFO - Hard negative weight: 0.05
+2025-05-11 20:23:22,481 - contrastive_training - INFO - Mixup alpha: 0.2
+2025-05-11 20:23:22,493 - contrastive_training - INFO - Using device: cuda
+2025-05-11 20:23:22,493 - contrastive_training - INFO - Data path: data/csv_files/data_cleaned.csv
+2025-05-11 20:23:22,493 - contrastive_training - INFO - Image folder: data/final-sample-dataset/images
+2025-05-11 20:23:22,620 - contrastive_training - INFO - Dataset successfully loaded with 1177 samples
+2025-05-11 20:23:22,640 - contrastive_training - INFO - Song embedding dimension: 64
+2025-05-11 20:23:39,017 - contrastive_training - INFO - Train set: 823 samples
+2025-05-11 20:23:39,018 - contrastive_training - INFO - Validation set: 177 samples
+2025-05-11 20:23:39,018 - contrastive_training - INFO - Test set: 177 samples
+2025-05-11 20:23:39,018 - contrastive_training - INFO - Actual batch sizes - Train: 16, Val: 16, Test: 16
+2025-05-11 20:23:39,018 - contrastive_training - INFO - DataLoaders created successfully
+2025-05-11 20:23:39,130 - contrastive_training - INFO - Model initialized successfully with resnet18 backbone
+2025-05-11 20:23:39,130 - contrastive_training - INFO - Optimizer and scheduler initialized
+2025-05-11 20:23:39,130 - contrastive_training - INFO - Starting training...
+2025-05-11 20:23:39,211 - contrastive_training - INFO - Starting enhanced training on device: cuda
+2025-05-11 20:23:40,745 - contrastive_training - INFO - Recalls: R@1: 0.00%, R@5: 2.82%, R@10: 6.21%
+2025-05-11 20:23:40,746 - contrastive_training - INFO - Current Learning rate: 0.000011
+2025-05-11 20:23:40,746 - contrastive_training - INFO - Epoch [1/75], Train Loss: 3.8432, Val Loss: 3.3374, Time: 1.53s
+2025-05-11 20:23:40,746 - contrastive_training - INFO - Creating embedding visualizations...
+2025-05-11 20:23:48,402 - contrastive_training - INFO - No improvement for 1 epochs
+2025-05-11 20:23:49,601 - contrastive_training - INFO - Recalls: R@1: 0.00%, R@5: 3.39%, R@10: 5.65%
+2025-05-11 20:23:49,601 - contrastive_training - INFO - Current Learning rate: 0.000021
+2025-05-11 20:23:49,601 - contrastive_training - INFO - Epoch [2/75], Train Loss: 3.7948, Val Loss: 3.3094, Time: 1.20s
+2025-05-11 20:23:49,602 - contrastive_training - INFO - No improvement for 2 epochs
+2025-05-11 20:23:50,800 - contrastive_training - INFO - Recalls: R@1: 0.56%, R@5: 3.39%, R@10: 5.08%
+2025-05-11 20:23:50,800 - contrastive_training - INFO - Current Learning rate: 0.000031
+2025-05-11 20:23:50,800 - contrastive_training - INFO - Epoch [3/75], Train Loss: 3.7500, Val Loss: 3.2527, Time: 1.20s
+2025-05-11 20:23:50,801 - contrastive_training - INFO - Recall@1 improved to 0.56%
+2025-05-11 20:23:51,996 - contrastive_training - INFO - Recalls: R@1: 0.56%, R@5: 3.39%, R@10: 5.65%
+2025-05-11 20:23:51,996 - contrastive_training - INFO - Current Learning rate: 0.000041
+2025-05-11 20:23:51,996 - contrastive_training - INFO - Epoch [4/75], Train Loss: 3.6410, Val Loss: 3.1342, Time: 1.20s
+2025-05-11 20:23:51,996 - contrastive_training - INFO - No improvement for 1 epochs
+2025-05-11 20:23:53,184 - contrastive_training - INFO - Recalls: R@1: 1.13%, R@5: 5.08%, R@10: 6.21%
+2025-05-11 20:23:53,184 - contrastive_training - INFO - Current Learning rate: 0.000051
+2025-05-11 20:23:53,184 - contrastive_training - INFO - Epoch [5/75], Train Loss: 3.4162, Val Loss: 2.9967, Time: 1.19s
+2025-05-11 20:23:53,184 - contrastive_training - INFO - Creating embedding visualizations...
+2025-05-11 20:23:55,100 - contrastive_training - INFO - Recall@1 improved to 1.13%
+2025-05-11 20:23:56,319 - contrastive_training - INFO - Recalls: R@1: 2.26%, R@5: 3.95%, R@10: 6.21%
+2025-05-11 20:23:56,319 - contrastive_training - INFO - Current Learning rate: 0.000060
+2025-05-11 20:23:56,319 - contrastive_training - INFO - Epoch [6/75], Train Loss: 3.3018, Val Loss: 2.8930, Time: 1.22s
+2025-05-11 20:23:56,320 - contrastive_training - INFO - Recall@1 improved to 2.26%
+2025-05-11 20:23:57,528 - contrastive_training - INFO - Recalls: R@1: 2.82%, R@5: 3.39%, R@10: 6.21%
+2025-05-11 20:23:57,528 - contrastive_training - INFO - Current Learning rate: 0.000070
+2025-05-11 20:23:57,528 - contrastive_training - INFO - Epoch [7/75], Train Loss: 3.1843, Val Loss: 2.8233, Time: 1.21s
+2025-05-11 20:23:57,529 - contrastive_training - INFO - Recall@1 improved to 2.82%
+2025-05-11 20:23:58,736 - contrastive_training - INFO - Recalls: R@1: 1.69%, R@5: 2.82%, R@10: 6.78%
+2025-05-11 20:23:58,736 - contrastive_training - INFO - Current Learning rate: 0.000080
+2025-05-11 20:23:58,737 - contrastive_training - INFO - Epoch [8/75], Train Loss: 3.1053, Val Loss: 2.7815, Time: 1.21s
+2025-05-11 20:23:58,737 - contrastive_training - INFO - No improvement for 1 epochs
+2025-05-11 20:23:59,937 - contrastive_training - INFO - Recalls: R@1: 1.69%, R@5: 3.39%, R@10: 6.21%
+2025-05-11 20:23:59,937 - contrastive_training - INFO - Current Learning rate: 0.000090
+2025-05-11 20:23:59,937 - contrastive_training - INFO - Epoch [9/75], Train Loss: 3.0742, Val Loss: 2.7590, Time: 1.20s
+2025-05-11 20:23:59,937 - contrastive_training - INFO - No improvement for 2 epochs
+2025-05-11 20:24:01,146 - contrastive_training - INFO - Recalls: R@1: 0.56%, R@5: 3.39%, R@10: 6.21%
+2025-05-11 20:24:01,146 - contrastive_training - INFO - Current Learning rate: 0.000100
+2025-05-11 20:24:01,146 - contrastive_training - INFO - Epoch [10/75], Train Loss: 3.0370, Val Loss: 2.7438, Time: 1.21s
+2025-05-11 20:24:01,146 - contrastive_training - INFO - Creating embedding visualizations...
+2025-05-11 20:24:02,940 - contrastive_training - INFO - No improvement for 3 epochs
+2025-05-11 20:24:04,175 - contrastive_training - INFO - Recalls: R@1: 1.69%, R@5: 3.39%, R@10: 7.34%
+2025-05-11 20:24:04,176 - contrastive_training - INFO - Current Learning rate: 0.000100
+2025-05-11 20:24:04,176 - contrastive_training - INFO - Epoch [11/75], Train Loss: 3.0245, Val Loss: 2.7388, Time: 1.24s
+2025-05-11 20:24:04,176 - contrastive_training - INFO - No improvement for 4 epochs
+2025-05-11 20:24:05,402 - contrastive_training - INFO - Recalls: R@1: 0.56%, R@5: 2.82%, R@10: 7.34%
+2025-05-11 20:24:05,402 - contrastive_training - INFO - Current Learning rate: 0.000100
+2025-05-11 20:24:05,402 - contrastive_training - INFO - Epoch [12/75], Train Loss: 3.0121, Val Loss: 2.7330, Time: 1.23s
+2025-05-11 20:24:05,402 - contrastive_training - INFO - No improvement for 5 epochs
+2025-05-11 20:24:06,629 - contrastive_training - INFO - Recalls: R@1: 1.69%, R@5: 2.82%, R@10: 6.21%
+2025-05-11 20:24:06,629 - contrastive_training - INFO - Current Learning rate: 0.000100
+2025-05-11 20:24:06,629 - contrastive_training - INFO - Epoch [13/75], Train Loss: 3.0070, Val Loss: 2.7299, Time: 1.23s
+2025-05-11 20:24:06,629 - contrastive_training - INFO - No improvement for 6 epochs
+2025-05-11 20:24:07,854 - contrastive_training - INFO - Recalls: R@1: 0.56%, R@5: 2.26%, R@10: 5.65%
+2025-05-11 20:24:07,855 - contrastive_training - INFO - Current Learning rate: 0.000099
+2025-05-11 20:24:07,855 - contrastive_training - INFO - Epoch [14/75], Train Loss: 3.0042, Val Loss: 2.7276, Time: 1.23s
+2025-05-11 20:24:07,855 - contrastive_training - INFO - No improvement for 7 epochs
+2025-05-11 20:24:09,078 - contrastive_training - INFO - Recalls: R@1: 0.56%, R@5: 2.26%, R@10: 5.08%
+2025-05-11 20:24:09,078 - contrastive_training - INFO - Current Learning rate: 0.000099
+2025-05-11 20:24:09,079 - contrastive_training - INFO - Epoch [15/75], Train Loss: 2.9997, Val Loss: 2.7259, Time: 1.22s
+2025-05-11 20:24:09,079 - contrastive_training - INFO - Creating embedding visualizations...
+2025-05-11 20:24:10,880 - contrastive_training - INFO - No improvement for 8 epochs
+2025-05-11 20:24:12,149 - contrastive_training - INFO - Recalls: R@1: 0.00%, R@5: 1.69%, R@10: 6.21%
+2025-05-11 20:24:12,149 - contrastive_training - INFO - Current Learning rate: 0.000098
+2025-05-11 20:24:12,149 - contrastive_training - INFO - Epoch [16/75], Train Loss: 2.9961, Val Loss: 2.7247, Time: 1.27s
+2025-05-11 20:24:12,149 - contrastive_training - INFO - No improvement for 9 epochs
+2025-05-11 20:24:13,397 - contrastive_training - INFO - Recalls: R@1: 0.56%, R@5: 1.69%, R@10: 6.21%
+2025-05-11 20:24:13,398 - contrastive_training - INFO - Current Learning rate: 0.000097
+2025-05-11 20:24:13,398 - contrastive_training - INFO - Epoch [17/75], Train Loss: 2.9969, Val Loss: 2.7239, Time: 1.25s
+2025-05-11 20:24:13,398 - contrastive_training - INFO - No improvement for 10 epochs
+2025-05-11 20:24:13,398 - contrastive_training - INFO - Early stopping triggered after 17 epochs
+2025-05-11 20:24:13,455 - contrastive_training - INFO - 
+Training Summary:
+2025-05-11 20:24:13,455 - contrastive_training - INFO - Total training time: 34.24 seconds
+2025-05-11 20:24:13,455 - contrastive_training - INFO - Best Recall@1: 2.82% (achieved on epoch 7)
+2025-05-11 20:24:13,455 - contrastive_training - INFO - Plotting training history...
+2025-05-11 20:24:13,811 - contrastive_training - INFO - Training history plot saved to contrastive_training_history.png
+2025-05-11 20:26:12,099 - contrastive_training - INFO - Training completed and model saved as contrastive_model_resnet18.pth!
+2025-05-11 20:26:12,099 - contrastive_training - INFO - 
+Evaluating on test set...
+2025-05-11 20:26:12,457 - contrastive_training - INFO - Test Loss: 2.6291
+2025-05-11 20:26:12,457 - contrastive_training - INFO - Top-5 matching accuracy on test set: 31.64%

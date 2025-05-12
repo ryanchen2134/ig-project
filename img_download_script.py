@@ -5,8 +5,8 @@ import mimetypes
 from urllib.parse import urlparse
 
 #Configuration
-csv_file_path ="data/csv_refresh/refreshed.csv"
-image_url_column = 'head_image_url'
+csv_file_path ="data/csv_files/data_cleaned.csv"
+image_url_column = 'link'
 image_name_column = 'shortcode'
 output_folder = 'data/final-sample-dataset/images'
 

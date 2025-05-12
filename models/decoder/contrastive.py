@@ -28,13 +28,14 @@ class ContrastiveImageSongModel(nn.Module):
             nn.Linear(song_embedding_dim, projection_dim),
             nn.LayerNorm(projection_dim),  # LayerNorm works better than GroupNorm for small batches
             nn.GELU(),
-            nn.Dropout(p=0.5),
+            nn.Dropout(p=0.1),
             nn.Linear(projection_dim, projection_dim // 2),
             nn.LayerNorm(projection_dim // 2),
             nn.GELU(),
-            nn.Dropout(p=0.3),
+            nn.Dropout(p=0.1),
             nn.Linear(projection_dim // 2, embedding_dim)
         )
+
 
         # Add similarity scaling parameter (learnable temperature)
         self.logit_scale = nn.Parameter(torch.ones([]) * np.log(1 / 0.07))
@@ -68,7 +69,6 @@ class ContrastiveImageSongModel(nn.Module):
         song_embedding = self.song_projection(song_features)
         
         # Normalize embeddings
-        image_embedding = F.normalize(image_embedding, p=2, dim=1)
         song_embedding = F.normalize(song_embedding, p=2, dim=1)
         
         return image_embedding, song_embedding
@@ -76,7 +76,8 @@ class ContrastiveImageSongModel(nn.Module):
     def similarity(self, image_embeddings, song_embeddings):
         """Get scaled cosine similarity with learned temperature"""
         # Clamp for stability
-        scale = torch.clamp(self.logit_scale.exp(), min=1.0, max=100.0)
+        scale = self.logit_scale.exp()
+        scale = torch.clamp(scale, 1.0, 1000.0)
         return scale * torch.matmul(image_embeddings, song_embeddings.T)
 
 
@@ -121,11 +122,20 @@ class NTXentLoss(nn.Module):
             mask = torch.eye(batch_size, dtype=torch.bool, device=similarity_matrix_detached.device)
             similarity_matrix_detached.masked_fill_(mask, float('-inf'))
             
-            # Find hard negatives (highest similarity incorrect matches)
-            hard_negatives_values, hard_negatives = torch.topk(similarity_matrix_detached, 
-                                                              k=2 if not self.hardest_only else 1, 
-                                                              dim=1)
-            
+            # Determine how many hard negatives we can safely request
+            max_k = similarity_matrix_detached.size(1) - 1          # B-1
+            desired_k = 2 if not self.hardest_only else 1
+            k = min(desired_k, max_k)
+
+            if k > 0:
+                hard_negatives_values, hard_negatives = torch.topk(
+                    similarity_matrix_detached, k=k, dim=1)
+            else:
+                # create an (B × 0) LongTensor so later loops are no-ops
+                B = similarity_matrix_detached.size(0)
+                hard_negatives = similarity_matrix_detached.new_empty(B, 0, dtype=torch.long)
+                hard_negatives_values = similarity_matrix_detached.new_empty(B, 0) 
+
             # Create boosted similarity matrix
             boosted_sim = similarity_matrix.clone()
             
@@ -141,8 +151,11 @@ class NTXentLoss(nn.Module):
             loss_s2i = self.criterion(boosted_sim.T, labels)
             
             # Add margin-based contrastive component for most difficult negatives
-            neg_sim = hard_negatives_values[:, 0]  
-            margin_loss = torch.mean(torch.clamp(neg_sim - pos_sim + self.margin, min=0))
+            if hard_negatives_values.numel() > 0:            # at least one neg
+                neg_sim = hard_negatives_values[:, 0]
+                margin_loss = torch.mean(torch.clamp(neg_sim - pos_sim + self.margin, min=0))
+            else:                                            # batch_size == 1
+                margin_loss = similarity_matrix_detached.new_zeros(1).squeeze()
             
             # Combined loss
             total_loss = (loss_i2s + loss_s2i) / 2 + 0.3 * margin_loss

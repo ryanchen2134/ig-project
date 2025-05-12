@@ -91,7 +91,7 @@ def calculate_recall_metrics(image_embeddings, song_embeddings, ks=[1, 5, 10]):
 def train_contrastive_model(model, train_loader, val_loader, optimizer, loss_fn, 
                         num_epochs=100, patience=15, device='cuda', checkpoint_dir='checkpoints', 
                         visualize_every=5, logger=None, scheduler=None, mixup_alpha=0.2,
-                        validate_every=1, eval_recalls=True, temperature_annealing=True):
+                        validate_every=1, eval_recalls=True, temperature_annealing=False):
         """
         Enhanced training function with better evaluation metrics
         """
@@ -435,25 +435,25 @@ if __name__ == "__main__":
     parser.add_argument('--backbone', type=str, default='resnet18', 
                         choices=['resnet18', 'efficientnet_b0', 'convnext_tiny'],
                         help='Backbone architecture for image encoder')
-    parser.add_argument('--batch_size', type=int, default=64, 
+    parser.add_argument('--batch_size', type=int, default=12, 
                         help='Batch size for training')
-    parser.add_argument('--embedding_dim', type=int, default=128, 
+    parser.add_argument('--embedding_dim', type=int, default=128,
                         help='Dimension of embedding space')
-    parser.add_argument('--lr', type=float, default=3e-4, 
+    parser.add_argument('--lr', type=float, default=1e-4, 
                         help='Learning rate')
     parser.add_argument('--weight_decay', type=float, default=1e-4, 
                         help='Weight decay for optimizer')
-    parser.add_argument('--epochs', type=int, default=300, 
+    parser.add_argument('--epochs', type=int, default=75, 
                         help='Maximum number of epochs')
     parser.add_argument('--patience', type=int, default=15, 
                         help='Early stopping patience')
     parser.add_argument('--temperature', type=float, default=0.05, 
                         help='Temperature parameter for NT-Xent loss')
-    parser.add_argument('--hard_negative_weight', type=float, default=0.2, 
+    parser.add_argument('--hard_negative_weight', type=float, default=0.05, 
                         help='Weight for hard negative mining (0 to disable)')
-    parser.add_argument('--mixup_alpha', type=float, default=0.4, 
+    parser.add_argument('--mixup_alpha', type=float, default=0.2, 
                         help='Alpha parameter for mixup augmentation (0 to disable)')
-    parser.add_argument('--data_path', type=str, default="data/csv files/rawr_dinosaur.csv",
+    parser.add_argument('--data_path', type=str, default="data/csv_files/data_cleaned.csv",
                         help='Path to the CSV data file')
     parser.add_argument('--img_folder', type=str, default="data/final-sample-dataset/images",
                         help='Path to the folder containing images')
@@ -547,7 +547,7 @@ if __name__ == "__main__":
     logger.info(f"Actual batch sizes - Train: {train_batch_size}, Val: {val_batch_size}, Test: {test_batch_size}")
     
     try:
-        train_loader = DataLoader(train_data, batch_size=train_batch_size, shuffle=True, num_workers=4)
+        train_loader = DataLoader(train_data, batch_size=train_batch_size, shuffle=True, drop_last=True, num_workers=4)
         val_loader = DataLoader(val_data, batch_size=val_batch_size, shuffle=False, num_workers=4)
         test_loader = DataLoader(test_data, batch_size=test_batch_size, shuffle=False, num_workers=4)
         logger.info("DataLoaders created successfully")
@@ -636,7 +636,8 @@ if __name__ == "__main__":
                 similarity = torch.matmul(image_embeddings, projected_song_embeddings.T)
 
                 # Top-5 accuracy computation
-                _, top5_indices = similarity.topk(k=5, dim=1)
+                k_safe = min(5, similarity.size(1))
+                _, top5_indices = similarity.topk(k=k_safe, dim=1)
                 targets = torch.arange(batch_size).to(device)  # Correct: batch_size here, not global batch_size
                 correct_top5 = (top5_indices == targets.view(-1, 1)).any(dim=1).sum().item()
 
