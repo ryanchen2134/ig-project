@@ -82,7 +82,7 @@ body {
     -webkit-text-fill-color: transparent;
     text-transform: lowercase;
     margin-bottom: 20px;
-    animation: shine 30s ease infinite;
+    animation: shine 15s ease infinite;
 }
 
 @keyframes shine {

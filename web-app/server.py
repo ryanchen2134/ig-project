@@ -15,6 +15,7 @@ CORS(app)
 
 UPLOAD_FOLDER = './uploads'
 MODEL_PATH = './backend/contrastive_model_resnet18_locked_44.57.pth'
+# MODEL_PATH = './backend/contrastive_model_resnet18_47%t5.pth'
 SONG_DB_PATH = './backend/test_song_database.pt'
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -82,9 +83,8 @@ def retrieve_songs():
             recommended_songs.append({
                 'title': song['title'],
                 'artist': song['artist'],
-                'similarity': round(song['similarity'] * 100, 2)  # convert to percentage
+                # 'similarity': round(song['similarity'] * 100, 2)  # convert to percentage
             })
-
         return jsonify({'recommended_songs': recommended_songs})
     except Exception as e:
         print(f"Error in retrieval: {e}")
