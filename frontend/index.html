@@ -28,87 +28,111 @@
     </header>
     <div class="container">
       <h1 class="title">no bad beats.</h1>
-    
-      <form id="uploadForm">
-        <input type="file" id="fileInput" accept="image/*" />
-        <button type="submit">Find My Songs</button>
-      </form>
       
+      <div class="upload-section">
+        <form id="uploadForm" enctype="multipart/form-data">
+          <label for="fileInput" class="upload-zone" id="uploadZone">
+            <i class="fas fa-upload"></i>
+          </label>
+          <input type="file" id="fileInput" name="file" accept="image/*" style="display:none">
+          <button type="submit">Get Songs</button>
+        </form>
+      </div>
+    </div>
     
     <script>
-      document.addEventListener('DOMContentLoaded', function() {
-        // Get the upload form
-        const uploadForm = document.getElementById('uploadForm');
-        
-        // Add submit event handler
-        uploadForm.addEventListener('submit', function(e) {
-          e.preventDefault();
-          
-          const fileInput = document.getElementById('fileInput');
-          
-          // Check if a file is selected
-          if (!fileInput.files.length) {
-            alert('Please select an image file.');
-            return;
-          }
-          
-          // Create form data
+      document.addEventListener('DOMContentLoaded', function () {
+        const uploadZone = document.getElementById('uploadZone');
+        const fileInput = document.getElementById('fileInput');
+
+        // Trigger file input when uploadZone is clicked
+        uploadZone.addEventListener('click', function (e) {
+          if (e.target === this) fileInput.click();
+        });
+
+        // Function to send image to backend
+        function sendImageToBackend(file) {
           const formData = new FormData();
-          formData.append('file', fileInput.files[0]);
-          
-          // Show some loading indicator (you might want to add this to your HTML)
-          // For example: document.getElementById('loading').style.display = 'block';
-          
-          // Send request to your Flask backend
+          formData.append('image', file);
+
           fetch('http://localhost:5000/retrieve_songs', {
             method: 'POST',
             body: formData
           })
-          .then(response => {
-            if (!response.ok) {
-              throw new Error('Server error');
-            }
-            return response.json();
-          })
+          .then(response => response.json())
           .then(data => {
-            console.log('Success:', data);
-            
-            // Format and display the results
-            if (data.recommended_songs && data.recommended_songs.length > 0) {
-              let songList = '';
-              
-              data.recommended_songs.forEach(song => {
-                songList += `<div>
-                  <strong>${song.title}</strong> by ${song.artist}
-                  <span>(${song.similarity}% match)</span>
-                </div>`;
-              });
-              
-              // Show results (you'll need to add a results container to your HTML)
-              // For example: document.getElementById('results').innerHTML = songList;
-              // document.getElementById('results').style.display = 'block';
-              
-              // Or simply show an alert for now
-              alert(`Found ${data.recommended_songs.length} matching songs. Check the console for details.`);
-            } else {
-              alert('No matching songs found');
-            }
-            
-            // Hide loading indicator
-            // document.getElementById('loading').style.display = 'none';
+            console.log('Recommended song:', data.song);
+            alert('Recommended Song: ' + data.song);
           })
           .catch(error => {
             console.error('Error:', error);
-            alert('Error processing your image. Please try again.');
-            
-            // Hide loading indicator
-            // document.getElementById('loading').style.display = 'none';
+            alert('Error contacting backend');
+          });
+        }
+
+        // File selection handler
+        fileInput.addEventListener('change', function () {
+          if (this.files && this.files[0]) {
+            alert('Selected: ' + this.files[0].name);
+            uploadZone.classList.remove('active');
+          }
+        });
+
+        // Drag-and-drop handlers
+        uploadZone.addEventListener('dragover', function (e) {
+          e.preventDefault();
+          this.style.borderColor = 'rgba(230, 210, 181, 0.8)';
+          this.style.backgroundColor = 'rgba(60, 40, 30, 0.8)';
+        });
+
+        uploadZone.addEventListener('dragleave', function (e) {
+          e.preventDefault();
+          this.style.borderColor = 'rgba(199, 169, 128, 0.4)';
+          this.style.backgroundColor = 'rgba(44, 30, 23, 0.6)';
+        });
+
+        uploadZone.addEventListener('drop', function (e) {
+          e.preventDefault();
+          if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+            fileInput.files = e.dataTransfer.files;
+            alert('Dropped: ' + e.dataTransfer.files[0].name);
+            this.style.borderColor = 'rgba(199, 169, 128, 0.4)';
+            this.style.backgroundColor = 'rgba(44, 30, 23, 0.6)';
+            uploadZone.classList.remove('active');
+          }
+        });
+
+        // Form submission handler
+        document.getElementById('uploadForm').addEventListener('submit', function(e) {
+          e.preventDefault();
+
+          if (!fileInput.files.length) {
+            alert('Please select an image file.');
+            return;
+          }
+
+          const formData = new FormData();
+          formData.append('file', fileInput.files[0]);
+
+          fetch('http://localhost:5000/retrieve_songs', {
+            method: 'POST',
+            body: formData
+          })
+          .then(response => response.json())
+          .then(data => {
+            console.log(data);
+            alert('Recommended Song: ' + data.song);  // Consider updating this to show in the page instead
+          })
+          .catch(error => {
+            console.error('Error:', error);
+            alert('Error contacting backend');
           });
         });
       });
     </script>
   </body>
 </html>
+
 
 
 
