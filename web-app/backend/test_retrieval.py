@@ -121,13 +121,13 @@ def test_with_sample_data(model_path, original_csv_path, test_image_path, device
         traceback.print_exc()
     
     # Clean up test files if needed
-    # if os.path.exists(test_db_path) and input("\nRemove test database? (y/n): ").lower() == 'y':
-    #     os.remove(test_db_path)
-    #     print("Test database removed.")
+    if os.path.exists(test_db_path) and input("\nRemove test database? (y/n): ").lower() == 'y':
+        os.remove(test_db_path)
+        print("Test database removed.")
     
-    # if os.path.exists(prepared_csv_path) and input("\nRemove prepared song data CSV? (y/n): ").lower() == 'y':
-    #     os.remove(prepared_csv_path)
-    #     print("Prepared song data CSV removed.")
+    if os.path.exists(prepared_csv_path) and input("\nRemove prepared song data CSV? (y/n): ").lower() == 'y':
+        os.remove(prepared_csv_path)
+        print("Prepared song data CSV removed.")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Test retrieval pipeline')

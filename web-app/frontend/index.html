@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>no bad beats</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Special+Gothic+Expanded+One&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Host+Grotesk:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <header class="top-bar">
+      <nav>
+        <ul>
+          <li><a href="about.html">About Us</a></li>
+        </ul>
+      </nav>  
+    </header>
+    <div class="container">
+      <h1 class="title">no bad beats.</h1>
+      
+      <div class="upload-section">
+        <form id="uploadForm" enctype="multipart/form-data">
+          <label for="fileInput" class="upload-zone" id="uploadZone">
+            <i class="fas fa-upload"></i>
+            <!-- <p>Drop your image here or click to upload</p> -->
+            <!-- <div id="preview" style="display:none;"></div> -->
+          </label>
+          <input type="file" id="fileInput" name="file" accept="image/*" style="display:none">
+          <!-- <button type="submit">Get Songs</button> -->
+        </form>
+      </div>
+
+      <div id="results" class="results-section" style="display:none;">
+        <h2>Recommended Songs</h2>
+        <div id="songList" class="song-list"></div>
+      </div>
+
+      <div id="loading" style="display:none;">
+        <p>Finding your perfect beats...</p>
+        <div class="spinner"></div>
+      </div>
+    </div>
+    
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        const uploadZone = document.getElementById('uploadZone');
+        const fileInput = document.getElementById('fileInput');
+        const preview = document.getElementById('preview');
+        const resultsSection = document.getElementById('results');
+        const songList = document.getElementById('songList');
+        const loading = document.getElementById('loading');
+
+        // Trigger file input when uploadZone is clicked
+        uploadZone.addEventListener('click', function (e) {
+          if (e.target === this || e.target.tagName === 'P' || e.target.tagName === 'I') {
+            fileInput.click();
+          }
+        });
+
+        // File selection handler with preview
+        fileInput.addEventListener('change', function () {
+          if (this.files && this.files[0]) {
+            const file = this.files[0];
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+              preview.innerHTML = `<img src="${e.target.result}" alt="Preview" style="max-width: 100%; max-height: 300px;">`;
+              preview.style.display = 'block';
+            }
+            
+            reader.readAsDataURL(file);
+          }
+        });
+
+        // Drag-and-drop handlers
+        uploadZone.addEventListener('dragover', function (e) {
+          e.preventDefault();
+          this.style.borderColor = 'rgba(230, 210, 181, 0.8)';
+          this.style.backgroundColor = 'rgba(60, 40, 30, 0.8)';
+        });
+
+        uploadZone.addEventListener('dragleave', function (e) {
+          e.preventDefault();
+          this.style.borderColor = 'rgba(199, 169, 128, 0.4)';
+          this.style.backgroundColor = 'rgba(44, 30, 23, 0.6)';
+        });
+
+        uploadZone.addEventListener('drop', function (e) {
+          e.preventDefault();
+          if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+            const file = e.dataTransfer.files[0];
+            fileInput.files = e.dataTransfer.files;
+            
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+              preview.innerHTML = `<img src="${e.target.result}" alt="Preview" style="max-width: 100%; max-height: 300px;">`;
+              preview.style.display = 'block';
+            }
+            
+            reader.readAsDataURL(file);
+            
+            this.style.borderColor = 'rgba(199, 169, 128, 0.4)';
+            this.style.backgroundColor = 'rgba(44, 30, 23, 0.6)';
+          }
+        });
+
+        // Form submission handler
+        document.getElementById('uploadForm').addEventListener('change', function(e) {
+          e.preventDefault();
+
+          if (!fileInput.files.length) {
+            alert('Please select an image file.');
+            return;
+          }
+
+          // Show loading indicator
+          loading.style.display = 'block';
+          resultsSection.style.display = 'none';
+          
+          const formData = new FormData();
+          formData.append('file', fileInput.files[0]);
+
+          fetch('/retrieve_songs', {
+            method: 'POST',
+            body: formData
+          })
+          .then(response => {
+            if (!response.ok) {
+              throw new Error('Network response was not ok');
+            }
+            return response.json();
+          })
+          .then(data => {
+            console.log(data);
+            
+            // Hide loading indicator
+            loading.style.display = 'none';
+            
+            // Display results
+            songList.innerHTML = '';
+            
+            if (data.recommended_songs && data.recommended_songs.length > 0) {
+              data.recommended_songs.forEach((song, index) => {
+                const songElement = document.createElement('div');
+                songElement.className = 'song-item';
+                songElement.innerHTML = `
+                  <div class="song-rank">${index + 1}</div>
+                  <div class="song-info">
+                    <h3>${song.title}</h3>
+                    <p>${song.artist}</p>
+                    <p class="similarity">Match: ${song.similarity}%</p>
+                  </div>
+                `;
+                songList.appendChild(songElement);
+              });
+              
+              resultsSection.style.display = 'block';
+            } else {
+              songList.innerHTML = '<p>No songs found matching your image.</p>';
+              resultsSection.style.display = 'block';
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+            loading.style.display = 'none';
+            alert('Error connecting to the server. Please try again later.');
+          });
+        });
+      });
+    </script>
+  </body>
+</html>
