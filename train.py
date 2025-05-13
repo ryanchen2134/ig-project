@@ -14,7 +14,7 @@ from torch.optim.lr_scheduler import CosineAnnealingWarmRestarts, _LRScheduler
 import argparse
 
 # Import your modified model and dataset
-from models.decoder.contrastive import ContrastiveImageSongModel, NTXentLoss
+from web_app.backend.models.decoder.contrastive import ContrastiveImageSongModel, NTXentLoss
 from data.dloader import ImgSongDataset
 
 # Set up logging
@@ -461,6 +461,9 @@ if __name__ == "__main__":
                         help='Number of epochs for learning rate warmup')
     parser.add_argument('--min_lr', type=float, default=5e-6,
                         help='Minimum learning rate after cosine decay')
+    parser.add_argument('--freeze_layers', type=int, default=6, 
+                    help='Number of early layers to freeze in the backbone (ResNet has 8 main modules)')
+
     
     args = parser.parse_args()
     
@@ -560,8 +563,10 @@ if __name__ == "__main__":
         model = ContrastiveImageSongModel(
             song_embedding_dim=song_embedding_dim, 
             embedding_dim=embedding_dim,
-            backbone_type=backbone_type
+            backbone_type=backbone_type,
+            freeze_layers=args.freeze_layers  # Add this parameter
         )
+
         logger.info(f"Model initialized successfully with {backbone_type} backbone")
     except Exception as e:
         logger.error(f"Failed to initialize model: {str(e)}")

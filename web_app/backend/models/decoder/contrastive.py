@@ -8,7 +8,8 @@ from .img_decoder import ImageEncoder
 
 # Combined model for contrastive learning
 class ContrastiveImageSongModel(nn.Module):
-    def __init__(self, song_embedding_dim, embedding_dim=128, backbone_type='resnet18', projection_dim=512):
+    def __init__(self, song_embedding_dim, embedding_dim=128, backbone_type='resnet18', 
+                 projection_dim=512, freeze_layers=4):
         """
         Enhanced contrastive model with additional regularization and more expressive projections
         
@@ -17,11 +18,16 @@ class ContrastiveImageSongModel(nn.Module):
             embedding_dim: Dimension of the shared embedding space
             backbone_type: Type of image encoder backbone
             projection_dim: Intermediate projection dimension
+            freeze_layers: Number of early layers to freeze in the backbone
         """
         super(ContrastiveImageSongModel, self).__init__()
         
-        # Use the modified ImageEncoder with selected backbone
-        self.image_encoder = ImageEncoder(embedding_dim=embedding_dim, backbone_type=backbone_type)
+        # Use the modified ImageEncoder with selected backbone and freeze_layers parameter
+        self.image_encoder = ImageEncoder(
+            embedding_dim=embedding_dim, 
+            backbone_type=backbone_type,
+            freeze_layers=freeze_layers
+        )
         
         # More expressive song projection 
         self.song_projection = nn.Sequential(
