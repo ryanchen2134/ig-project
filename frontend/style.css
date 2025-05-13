@@ -1,0 +1,177 @@
+.special-gothic-expanded-one-regular {
+    font-family: "Special Gothic Expanded One", sans-serif;
+    font-weight: 400;
+    font-style: normal;
+  }
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Host Grotesk', sans-serif; /* Changed to Outfit or any other default font you prefer */
+    background: linear-gradient(
+        180deg,
+        rgb(30,30,30) 0%,
+        rgb(30,30,30) 15%,
+        rgb(27,27,27) 30%,
+        rgb(27,27,27) 45%,
+        rgb(27,27,27) 60%,
+        rgb(27,27,27) 80%,
+        rgb(25,25,25) 100%
+    );
+    justify-content: center; /* horizontal alignment  */
+    align-items: flex-start; /* vertical alignment */
+    height: 100vh;
+    overflow: hidden;
+    color: #e6d2b5;
+    padding-top: 40px;
+    text-align: center; 
+}
+
+/* Styling for the top bar */
+.top-bar {
+    position: fixed;
+    top: 0;
+    left: 0;            
+    width: 100%;
+    background-color: rgb(23,23,23); /* Dark background */  
+    color: rgb(200,200,200); /* White text color */
+    padding: 15px 30px; /* Padding for the bar */
+    z-index: 1000; /* Make sure it stays on top */
+}
+
+/* Navigation inside the top bar */
+.top-bar nav ul {
+    list-style: none;
+    display: flex;
+    justify-content: flex-end;
+    gap: 30px; /* Space between links */
+}
+
+/* Links in the top bar */
+.top-bar nav ul li a {
+    text-decoration: none;
+    color: rgb(200,200,200); /* Link color */
+    font-size: 18px;
+    font-weight: 600;
+    transition: color 0.3s ease;
+}
+
+/* Hover effect for links */
+.top-bar nav ul li a:hover {
+    color: rgb(255, 255, 255); /* Change color on hover */
+}
+
+/* Adjust content below the top bar */
+.container {
+    padding-top: 70px; /* Push the content down to prevent overlap */
+}
+
+
+.title {
+    font-family: 'Special Gothic Expanded One', sans-serif;
+    font-size: 100px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    background: linear-gradient(270deg, rgb(238,202,133) 0%, rgb(101,162,183) 25%, rgb(233,162,193) 50%, rgb(199,126,229) 75%, rgb(233,179,170) 100%);
+    background-size: 400% 400%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-transform: lowercase;
+    margin-bottom: 20px;
+    animation: shine 30s ease infinite;
+}
+
+@keyframes shine {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+.subtitle {
+    font-family: 'Host Grotesk', sans-serif;
+    font-size: 20px;        
+    color: rgb(255,255,255);
+}
+
+.upload-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 40px;
+}
+
+.upload-zone {
+    margin-top: 10px;
+    padding: 10px; /* Increase padding for more space */
+    width: 500px; /* Adjust the width */
+    height: 400px; /* Adjust the height */
+    border: 10px solid transparent; 
+    border-image: linear-gradient(45deg, rgb(20,20,20), rgb(40,40,40)) 1;
+    border-radius: 12px;
+    background-color: rgba(25,25,25, 0.6);
+    color: rgb(125,125,125);    
+    transition: all 0.3s ease;  
+
+    display: flex;  
+    justify-content: center; /* horizontal alignment */
+    align-items: center; /* vertical alignment */
+    text-align: center; 
+    font-size: 100px; 
+}
+
+.upload-zone.active {   
+    display: block;
+}
+
+.upload-zone:hover {
+    border-color: rgba(30,30,30, 0.8);
+    background-color: rgba(25,25,25, 0.85);
+    border-image: linear-gradient(45deg, rgb(40,40,40),  rgb(20,20,20)) 1;
+    border-radius: 12px;
+    color: rgb(175,175,175);    
+}
+
+button {
+    font-family: 'Host Grotesk', sans-serif;
+    font-size: 20px;        
+    color: rgb(175,175,175);
+    background-color: rgba(25,25,25); 
+    padding: 15px 32px; /* Add padding for size */
+    text-align: center; /* Center the text */
+    text-decoration: none; /* Remove underline */
+    display: inline-block; /* Make the button inline */
+    cursor: pointer; /* Change cursor to pointer */
+    border-radius: 20px; /* Rounded corners */
+    border: 5px solid transparent;
+    border-image: linear-gradient(45deg, rgb(20,20,20), rgb(40,40,40)) 1;
+    transition: background-color 0.3s ease; /* Smooth transition for hover effect */
+    margin-top: 20px; /* Add space above the button */
+}
+
+button:hover {
+    border-color: rgba(30,30,30, 0.8);
+    background-color: rgba(25,25,25, 0.85);
+    border-image: linear-gradient(45deg, rgb(40,40,40),  rgb(20,20,20)) 1;
+    border-radius: 12px;
+    color: rgb(255,255,255);   
+    margin-top: 20px; /* Add space above the button */
+}
+
+.poster img {
+    max-width: 100%;
+    max-height: 90vh; /* so it doesn't exceed the screen height */
+    height: auto;
+    width: auto;
+    object-fit: contain;
+  }
