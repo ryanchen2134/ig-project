@@ -22,7 +22,6 @@ body {
         rgb(27,27,27) 80%,
         rgb(25,25,25) 100%
     );
-    display: flex;
     justify-content: center; /* horizontal alignment  */
     align-items: flex-start; /* vertical alignment */
     height: 100vh;
@@ -143,6 +142,36 @@ body {
     color: rgb(175,175,175);    
 }
 
-#fileInput {
-    display: none;
+button {
+    font-family: 'Host Grotesk', sans-serif;
+    font-size: 20px;        
+    color: rgb(175,175,175);
+    background-color: rgba(25,25,25); 
+    padding: 15px 32px; /* Add padding for size */
+    text-align: center; /* Center the text */
+    text-decoration: none; /* Remove underline */
+    display: inline-block; /* Make the button inline */
+    cursor: pointer; /* Change cursor to pointer */
+    border-radius: 20px; /* Rounded corners */
+    border: 5px solid transparent;
+    border-image: linear-gradient(45deg, rgb(20,20,20), rgb(40,40,40)) 1;
+    transition: background-color 0.3s ease; /* Smooth transition for hover effect */
+    margin-top: 20px; /* Add space above the button */
 }
+
+button:hover {
+    border-color: rgba(30,30,30, 0.8);
+    background-color: rgba(25,25,25, 0.85);
+    border-image: linear-gradient(45deg, rgb(40,40,40),  rgb(20,20,20)) 1;
+    border-radius: 12px;
+    color: rgb(255,255,255);   
+    margin-top: 20px; /* Add space above the button */
+}
+
+.poster img {
+    max-width: 100%;
+    max-height: 90vh; /* so it doesn't exceed the screen height */
+    height: auto;
+    width: auto;
+    object-fit: contain;
+  }
