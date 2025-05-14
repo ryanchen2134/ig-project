@@ -450,6 +450,56 @@ def test_retrieval(args):
     
     print("\nRetrieval test completed successfully!")
 
+def create_song_database(args):
+    """
+    Create a song database for retrieval
+    
+    Args:
+        args: Command line arguments
+    """
+    logger = setup_logger()
+    
+    # Load or train encoder
+    if os.path.exists(args.encoder_path):
+        logger.info(f"Loading encoder from {args.encoder_path}")
+        autoencoder = torch.load(args.encoder_path, map_location=config.DEVICE)
+        encoder = autoencoder.encoder
+    else:
+        logger.error(f"Encoder not found at {args.encoder_path}")
+        return
+    
+    # Import song encoder pipeline
+    from models.encoders.song_encoder_pipeline import (
+        EssentiaFeatureExtractor,
+        CLAPFeatureExtractor,
+        LyricsFeatureExtractor,
+        SongFeaturePipeline
+    )
+    
+    # Initialize feature extractors
+    logger.info("Initializing feature extractors...")
+    essentia_extractor = EssentiaFeatureExtractor(args.audio_folder)
+    clap_extractor = CLAPFeatureExtractor(device=config.DEVICE)
+    lyrics_extractor = LyricsFeatureExtractor(args.genius_token)
+    
+    # Create feature pipeline
+    pipeline = SongFeaturePipeline(
+        essentia_extractor,
+        clap_extractor,
+        lyrics_extractor,
+        args.audio_folder
+    )
+    
+    # Build song database
+    logger.info(f"Building song database from {args.data_path}...")
+    database = pipeline.build_song_database(
+        args.data_path,
+        args.song_db_path,
+        encoder
+    )
+    
+    logger.info(f"Created song database with {len(database)} songs")
+    
 def main():
     """Main entry point"""
     parser = argparse.ArgumentParser(description='Image-Song Contrastive Learning')
@@ -488,6 +538,15 @@ def main():
     test_parser.add_argument('--song_db', type=str, default=config.SONG_DATABASE_PATH, help='Path to song database')
     test_parser.add_argument('--test_image', type=str, required=True, help='Path to test image')
     test_parser.add_argument('--top_k', type=int, default=5, help='Number of top songs to retrieve')
+    
+    # Song database command
+    db_parser = subparsers.add_parser('create_db', help='Create song database for retrieval')
+    db_parser.add_argument('--data-path', type=str, required=True, help='Path to CSV with song data')
+    db_parser.add_argument('--audio-folder', type=str, default="data/dataset/audio", help='Path to audio folder')
+    db_parser.add_argument('--encoder-path', type=str, default="song_autoencoder.pt", help='Path to trained encoder')
+    db_parser.add_argument('--song-db-path', type=str, default=config.SONG_DATABASE_PATH, help='Path to save song database')
+    db_parser.add_argument('--genius-token', type=str, default=None, help='Genius API token for lyrics')
+
     
     # Parse arguments
     args = parser.parse_args()

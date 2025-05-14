@@ -1,0 +1,36 @@
+.
+├── config.py
+├── data
+│   ├── dataset
+│   │   ├── audio
+│   │   ├── images
+│   │   │   ├── C_0abX8SJ_f.jpg
+│   │   │   ├─...
+│   │   │   ├── DIZOp7YPbbA.jpg
+│   │   │   └── DIZOPhRPCLF.jpg
+│   │   └── pairs.csv
+│   ├── dataset.py
+│   └── tree.txt
+├── inference
+│   └── retrieval.py
+├── main.py
+├── models
+│   ├── constrastive
+│   │   ├── loss.py
+│   │   └── model.py
+│   └── encoders
+│       ├── clip_image_encoder.py
+│       ├── song_encoder_pipeline.py
+│       └── song_encoder.py
+├── requirements.txt
+├── server
+│   └── server.py
+├── training
+│   ├── scheduler.py
+│   ├── train.py
+│   └── visualize.py
+├── tree.txt
+└── utils
+    └── metrics.py
+
+44 directories, 2730 files
